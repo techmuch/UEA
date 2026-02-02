@@ -1,0 +1,32 @@
+# Binaries for Go applications
+bin/
+
+# Generated frontend build output
+web/
+frontend/dist/
+
+# Local data
+data/
+uea.log
+
+# Go module cache
+.cache/
+
+# IDE files
+.idea/
+.vscode/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# npm and yarn caches
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
