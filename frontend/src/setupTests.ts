@@ -22,8 +22,3 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
   writable: true
 });
-
-Object.defineProperty(global, 'localStorage', {
-  value: localStorageMock,
-  writable: true
-});

@@ -1101,40 +1101,14 @@ function App() {
         }
       } catch (e) {
         console.error('[UEA] Error selecting tab', e);
+        layoutStore.addTab(id, label);
       }
     } else {
-      console.log('[UEA] Creating new tab via direct action');
+      console.log('[UEA] Creating new tab via addTab');
       try {
-        const Actions = (window as any).FlexLayout?.Actions || (model as any).Actions;
-        let tabsetId: string | null = null;
-        const activeTabset = model.getActiveTabset();
-        if (activeTabset) {
-          tabsetId = activeTabset.getId();
-        } else {
-          model.visitNodes((node: any) => {
-            if (node.getType() === 'tabset' && !tabsetId) {
-              tabsetId = node.getId();
-            }
-          });
-        }
-        
-        if (tabsetId) {
-          if (Actions) {
-            model.doAction(Actions.addNode({ type: 'tab', component: id, name: label }, tabsetId, 'center', -1));
-          } else {
-            model.doAction({
-              type: 'FlexLayout_AddNode',
-              data: { type: 'tab', component: id, name: label },
-              toNode: tabsetId,
-              location: 'center',
-              index: -1
-            } as any);
-          }
-        } else {
-          console.warn('[UEA] No tabset found to add to');
-        }
+        layoutStore.addTab(id, label);
       } catch (e) {
-        console.error('[UEA] Error adding tab directly', e);
+        console.error('[UEA] Error adding tab', e);
       }
     }
   }, []);
