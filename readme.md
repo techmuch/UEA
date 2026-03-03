@@ -4,9 +4,9 @@
 
 ## Key Features
 
-*   **Unified Dashboard**: Aggregate and analyze email data from multiple accounts in a single interface.
-*   **Powerful Search**: Combine traditional keyword search with modern semantic search to find exactly what you're looking for.
-*   **Interactive Analytics**: Explore your data with interactive charts and visualizations.
+*   **Unified Dashboard**: Aggregate and analyze email data from multiple accounts in a single professional-grade interface powered by the `nexus-shell` framework.
+*   **Interactive Analytics**: Explore your data with interactive heatmaps (powered by `@nivo/calendar`), dynamic donut charts, and topic treemaps. Drill down with deep cross-filtering between dates, senders, and topics.
+*   **Intelligent Mailbox**: Seamlessly pivot from high-level analytics to a high-performance email feed filtered precisely by your dashboard selections.
 *   **AI-Assisted Workflows**: Leverage the power of large language models (LLMs) to summarize threads, draft responses, and more.
 *   **Privacy-First**: Your data is stored locally, and no email content is ever sent to a third party without your explicit consent.
 *   **Cross-Platform**: UEA is available for Windows, macOS, and Linux.

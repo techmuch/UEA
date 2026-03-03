@@ -47,20 +47,20 @@ The uea binary serves as both the web server and a powerful administrative tool:
 
 The application adopts a **Master-Detail-Filter** layout.
 
-* **Global Sidebar:** Provides high-level navigation between the Dashboard, Search, Social Graph, and Settings.  
-* **Dynamic Filter Bar:** A persistent top-level bar that aggregates all active filters. It supports "Breadcrumb Filtering," where users can see exactly which constraints are narrowing their view (e.g., Account: Personal \[x\] \+ Topic: Finance \[x\]).
+*   **Global Sidebar**: Provides high-level navigation between the Dashboard, Mailbox, Search, and Settings.  
+*   **Dynamic Filter Bar**: A persistent top-level bar that aggregates all active filters into distinct, removable pillboxes (e.g., `[Date: 2026-02-25 x]`, `[From: alice@tech.com x]`). It supports deep cross-filtering, allowing users to drill down by selecting points of interest in the dashboard, which instantly filters both the analytics and the unified Mailbox feed.
 
 ### **3.2. Primary Views & Layouts**
 
 #### **3.2.1. The Analytics Pulse (Main Dashboard)**
 
-The "Pulse" is the primary engine for data discovery. It is composed of interactive widgets that communicate via a shared state.
+The "Pulse" is the primary engine for data discovery. It is composed of interactive widgets that communicate via a shared Zustand state.
 
-* **Temporal Volume Widget:** A bar chart showing message density over time. Drag-and-drop selection on the chart allows users to "zoom in" on a specific time period.  
-* **Sender/Domain Donut Chart:** A breakdown of where mail is coming from. Users can click a domain (e.g., @github.com) to instantly see all notifications from that service.  
-* **Topic Treemap:** Uses size and color to represent the volume and sentiment of AI-discovered topics.
+*   **Temporal Volume Heatmap**: A calendar-based heat map (via `@nivo/calendar`) showing message density over the year. Clicking a specific day instantly filters all other widgets and the Mailbox to that date.
+*   **Top Senders List**: A ranked breakdown of where mail is coming from, automatically excluding the user's own addresses. Clicking a sender applies a cross-filter.
+*   **Topic Trends**: Uses interactive pillboxes to represent the volume of AI-discovered or keyword-based topics. Users can configure persistent "Ignore Words" via the settings menu to refine this list.
 
-#### **3.2.2. The Unified Message List (The Feed)**
+#### **3.2.2. The Mailbox (The Feed)**
 
 * **High-Performance Feed:** Implements React Virtualization to handle scrolling through hundreds of thousands of entries with zero lag.  
 * **Contextual Actions:** Quick-action buttons on each list item allow for "Single-Click Search for Related" or "Extract Attachments."  

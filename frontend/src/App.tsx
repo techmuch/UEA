@@ -171,6 +171,17 @@ const Dashboard = () => {
           </button>
         )}
       </div>
+
+      {(date || from || topic) && (
+        <div className="bg-primary/5 border border-primary/10 rounded-xl px-4 py-2 flex items-center gap-3 mb-6">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-primary/60">Active Filters:</span>
+          <div className="flex flex-1 gap-2 overflow-auto no-scrollbar">
+            {date && <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-semibold rounded-md flex items-center gap-1 shadow-sm">Date: {date} <X onClick={() => setDate(null)} className="w-2.5 h-2.5 cursor-pointer" /></span>}
+            {from && <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-semibold rounded-md flex items-center gap-1 shadow-sm">From: {from} <X onClick={() => setFrom(null)} className="w-2.5 h-2.5 cursor-pointer" /></span>}
+            {topic && <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-semibold rounded-md flex items-center gap-1 shadow-sm">Topic: {topic} <X onClick={() => setTopic(null)} className="w-2.5 h-2.5 cursor-pointer" /></span>}
+          </div>
+        </div>
+      )}
       
       <div className="space-y-6">
         {/* Temporal Volume - Calendar Heatmap */}
@@ -1055,7 +1066,6 @@ componentRegistry.register('search', () => <div className="p-8 text-muted-foregr
 componentRegistry.register('settings', SettingsView);
 
 function App() {
-  const addTab = useLayoutStore((state) => state.addTab);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeAccount, setActiveAccount] = useState<any>(null);
@@ -1087,7 +1097,7 @@ function App() {
         if (Actions) {
           model.doAction(Actions.selectTab(existingTabId));
         } else {
-          model.doAction({ type: 'FlexLayout_SelectTab', data: { tabId: existingTabId } });
+          model.doAction({ type: 'FlexLayout_SelectTab', data: { tabId: existingTabId } } as any);
         }
       } catch (e) {
         console.error('[UEA] Error selecting tab', e);
@@ -1096,9 +1106,10 @@ function App() {
       console.log('[UEA] Creating new tab via direct action');
       try {
         const Actions = (window as any).FlexLayout?.Actions || (model as any).Actions;
-        let tabsetId = null;
-        if (model.getActiveTabset()) {
-          tabsetId = model.getActiveTabset().getId();
+        let tabsetId: string | null = null;
+        const activeTabset = model.getActiveTabset();
+        if (activeTabset) {
+          tabsetId = activeTabset.getId();
         } else {
           model.visitNodes((node: any) => {
             if (node.getType() === 'tabset' && !tabsetId) {
@@ -1117,7 +1128,7 @@ function App() {
               toNode: tabsetId,
               location: 'center',
               index: -1
-            });
+            } as any);
           }
         } else {
           console.warn('[UEA] No tabset found to add to');

@@ -81,21 +81,13 @@ This document outlines the core features of the Email UEA workbench and provides
   4. Open **Settings -> Appearance**.
   5. Switch between Light, Dark, and Georgia Tech themes.
 
-## 8. Mock IMAP Server Testing
-**Feature:** Test local synchronization with a controlled data set.
-- **Setup:** The mock server is running on `127.0.0.1:3143` (started via `scripts/mock_imap.py`).
+## 9. Analytics Dashboard Filter Bar
+**Feature:** Active filters are visible in the dashboard and can be cleared.
 - **Steps to Test:**
-  1. Click **+ Add Account**.
-  2. Fill in details:
-     - Name: `Mock Server`
-     - Email: `admin@uea.local`
-     - Username: `admin`
-     - Password: `any`
-     - IMAP Server: `127.0.0.1`
-     - Port: `3143`
-     - **Uncheck** "Use SSL/TLS".
-  3. Click **Test Connection**. Verify success.
-  4. Click **Save Account**.
-  5. Click the **Refresh (Sync)** icon on the "Mock Server" card.
-  6. Verify that 3 messages are added.
-  7. Open the **Mail Client** and verify these specific messages (Alice, Bob, Flight info) appear in the list.
+  1. Open **Tools -> Analytics Dashboard**.
+  2. Click on a Top Sender or Topic Trend to apply a filter.
+  3. Verify the **Active Filters** bar appears below the "Analytics Pulse" header, displaying the selected filter.
+  4. Click the **X** on the specific filter tag to clear it.
+  5. Verify the filter is cleared and the dashboard data resets.
+  6. Apply another filter, then click the **Clear All** button in the filter bar.
+  7. Verify all filters are cleared and the filter bar disappears.

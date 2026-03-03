@@ -17,7 +17,7 @@ The backend is responsible for:
 
 ### 1.2. Frontend (ReactJS)
 
-The frontend is a modern ReactJS application that provides a rich and interactive user experience. It uses a Master-Detail-Filter layout and includes a variety of widgets and views for exploring and analyzing email data.
+The frontend is a modern ReactJS application built with Vite, TypeScript, and Tailwind CSS. It leverages the `nexus-shell` framework to provide a professional, VS Code-inspired Master-Detail-Filter layout. It utilizes `zustand` for high-performance global state management (especially for cross-filtering logic) and `@nivo/calendar` for rich data visualizations.
 
 ## 2. Getting Started
 
@@ -99,7 +99,7 @@ go test ./...
 
 ### 4.2. Frontend
 
-The frontend uses Jest and React Testing Library for testing. To run the tests, use the following command:
+The frontend uses Vitest, JSDOM, and React Testing Library for testing. To run the tests, use the following command:
 
 ```bash
 cd frontend

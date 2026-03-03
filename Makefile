@@ -1,11 +1,17 @@
-.PHONY: all frontend backend clean run stop start restart
+.PHONY: all build frontend backend clean run stop start restart
 
-all: frontend backend
+all: build
+
+build: frontend backend
 
 frontend:
 	@echo "Building frontend..."
 	npm --prefix frontend install
-	npm --prefix frontend run build -- --outDir ../web/static
+	npm --prefix frontend run build
+	@echo "Copying assets to embedded static directory..."
+	rm -rf internal/embed/static/*
+	mkdir -p internal/embed/static
+	cp -r frontend/dist/* internal/embed/static/
 
 backend:
 	@echo "Building backend..."

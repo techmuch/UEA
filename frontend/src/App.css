@@ -7,14 +7,3 @@
   max-width: none;
 }
 
-/* Hide Nexus Shell Activity Bar and Sidebar Pane as per user request */
-/* The layout structure is: .flex-1.flex.overflow-hidden > ActivityBar (1st), SidebarPane (2nd) */
-.uea-workbench .flex-1.flex.overflow-hidden > div:nth-child(1),
-.uea-workbench .flex-1.flex.overflow-hidden > div:nth-child(2) {
-  display: none !important;
-}
-
-/* Ensure the main content area takes full width since sidebars are hidden */
-.uea-workbench .flex-1.flex.overflow-hidden > div:nth-child(3) {
-  width: 100% !important;
-}
