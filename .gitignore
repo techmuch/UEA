@@ -8,6 +8,7 @@ frontend/dist/
 # Local data
 data/
 uea.log
+mock_imap.log
 
 # Go module cache
 .cache/

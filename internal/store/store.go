@@ -9,18 +9,18 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"time" // Added for Message struct
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/user/uea/internal/account"
-	"github.com/user/uea/internal/message" // Added for Message struct
+	"github.com/user/uea/internal/message"
 )
 
 const (
 	// DBNAME is the default name for the SQLite database file.
 	DBNAME = "uea.db"
 	// SchemaVersion is the current version of the database schema.
-	SchemaVersion = 2 // Updated schema version
+	SchemaVersion = 7
 )
 
 var (
@@ -28,13 +28,43 @@ var (
 	dbOnce sync.Once
 )
 
+// User represents a system user.
+type User struct {
+	ID              string `json:"id"`
+	Username        string `json:"username"`
+	PasswordHash    string `json:"-"`
+	DisplayName     string `json:"displayName"`
+	Email           string `json:"email"`
+	ProfileImageURL string `json:"profileImageUrl"`
+}
+
+// Session represents a user session.
+type Session struct {
+	ID        string    `json:"id"`
+	UserID    string    `json:"userId"`
+	ExpiresAt time.Time `json:"expiresAt"`
+}
+
 // MailboxSyncState represents the synchronization state for a specific mailbox.
 type MailboxSyncState struct {
-	ID        string `json:"id"`        // Unique ID for the mailbox state (e.g., accountID-mailboxName)
-	AccountID string `json:"accountId"` // ID of the associated account
-	Name      string `json:"name"`      // Name of the mailbox (e.g., INBOX, Sent)
-	LastUID   uint32 `json:"lastUid"`   // Last UID fetched from this mailbox
-	LastMODSEQ uint64 `json:"lastModseq"` // Last MODSEQ from this mailbox (0 if not supported by server)
+	ID        string `json:"id"`
+	AccountID string `json:"accountId"`
+	Name      string `json:"name"`
+	LastUID   uint32 `json:"lastUid"`
+	LastMODSEQ uint64 `json:"lastModseq"`
+}
+
+// AnalyticsData represents a point in a time series.
+type AnalyticsData struct {
+	Label string `json:"label"`
+	Value int    `json:"value"`
+}
+
+// AnalyticsFilter represents optional filters for analytics queries.
+type AnalyticsFilter struct {
+	Date  string `json:"date"`  // YYYY-MM-DD
+	From  string `json:"from"`  // email address
+	Topic string `json:"topic"` // keyword
 }
 
 // InitDB initializes the SQLite database connection and sets up the schema.
@@ -44,7 +74,6 @@ func InitDB(dataDir string) (*sql.DB, error) {
 		dbPath := filepath.Join(dataDir, DBNAME)
 		log.Printf("Initializing database at: %s", dbPath)
 
-		// Create data directory if it doesn't exist
 		if err = os.MkdirAll(dataDir, 0755); err != nil {
 			err = fmt.Errorf("failed to create data directory: %w", err)
 			return
@@ -56,10 +85,6 @@ func InitDB(dataDir string) (*sql.DB, error) {
 			return
 		}
 
-		// Configure SQLite for WAL and NORMAL synchronous mode
-		// These settings are per-connection, but applied to the first connection will set them globally.
-		// For a more robust solution, these should be applied to each new connection.
-		// For simplicity, we apply them once here.
 		_, err = db.Exec("PRAGMA journal_mode=WAL;")
 		if err != nil {
 			err = fmt.Errorf("failed to set WAL journal mode: %w", err)
@@ -99,7 +124,7 @@ func migrateDB(db *sql.DB) error {
 				host TEXT NOT NULL,
 				port INTEGER NOT NULL,
 				user TEXT NOT NULL,
-				password TEXT NOT NULL, -- Will be encrypted later
+				password TEXT NOT NULL,
 				ssl BOOLEAN NOT NULL
 			);
 
@@ -108,7 +133,7 @@ func migrateDB(db *sql.DB) error {
 				account_id TEXT NOT NULL,
 				name TEXT NOT NULL,
 				last_uid INTEGER DEFAULT 0,
-				last_modseq INTEGER DEFAULT 0, -- IMAP MODSEQ, 0 if not supported
+				last_modseq INTEGER DEFAULT 0,
 				FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
 				UNIQUE(account_id, name)
 			);
@@ -118,11 +143,11 @@ func migrateDB(db *sql.DB) error {
 		if err != nil {
 			return fmt.Errorf("failed to apply schema v1: %w", err)
 		}
-		_, err = db.Exec(fmt.Sprintf("PRAGMA user_version = %d;", 1))
+		_, err = db.Exec("PRAGMA user_version = 1;")
 		if err != nil {
-			return fmt.Errorf("failed to set schema version to 1: %w", err)
+			return err
 		}
-		log.Println("Schema migration v1 applied.")
+		currentVersion = 1
 	}
 
 	if currentVersion < 2 {
@@ -136,17 +161,17 @@ func migrateDB(db *sql.DB) error {
 				content_hash TEXT NOT NULL,
 				normalized_body TEXT NOT NULL,
 				from_addr TEXT NOT NULL,
-				to_addrs TEXT NOT NULL, -- Stored as comma-separated string or JSON array
-				cc_addrs TEXT NOT NULL, -- Stored as comma-separated string or JSON array
-				bcc_addrs TEXT NOT NULL, -- Stored as comma-separated string or JSON array
+				to_addrs TEXT NOT NULL,
+				cc_addrs TEXT NOT NULL,
+				bcc_addrs TEXT NOT NULL,
 				subject TEXT NOT NULL,
-				date INTEGER NOT NULL, -- Unix timestamp
+				date INTEGER NOT NULL,
 				body TEXT NOT NULL,
 				html_body TEXT NOT NULL,
 				header BLOB NOT NULL,
-				flags TEXT NOT NULL, -- Stored as comma-separated string or JSON array
+				flags TEXT NOT NULL,
 				size INTEGER NOT NULL,
-				internal_date INTEGER NOT NULL, -- Unix timestamp
+				internal_date INTEGER NOT NULL,
 				FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
 			);
 
@@ -157,348 +182,524 @@ func migrateDB(db *sql.DB) error {
 		if err != nil {
 			return fmt.Errorf("failed to apply schema v2: %w", err)
 		}
-		_, err = db.Exec(fmt.Sprintf("PRAGMA user_version = %d;", 2))
+		_, err = db.Exec("PRAGMA user_version = 2;")
 		if err != nil {
-			return fmt.Errorf("failed to set schema version to 2: %w", err)
+			return err
 		}
-		log.Println("Schema migration v2 applied.")
+		currentVersion = 2
+	}
+
+	if currentVersion < 3 {
+		log.Println("Applying schema migration v3...")
+		_, err := db.Exec(`
+			ALTER TABLE accounts ADD COLUMN name TEXT;
+			ALTER TABLE accounts ADD COLUMN smtp_host TEXT;
+			ALTER TABLE accounts ADD COLUMN smtp_port INTEGER;
+		`)
+		if err != nil {
+			log.Printf("Warning v3: %v", err)
+		}
+		_, err = db.Exec("PRAGMA user_version = 3;")
+		if err != nil {
+			return err
+		}
+		currentVersion = 3
+	}
+
+	if currentVersion < 4 {
+		log.Println("Applying schema migration v4...")
+		_, err := db.Exec(`ALTER TABLE accounts ADD COLUMN email TEXT;`)
+		if err != nil {
+			log.Printf("Warning v4: %v", err)
+		}
+		_, err = db.Exec("PRAGMA user_version = 4;")
+		if err != nil {
+			return err
+		}
+		currentVersion = 4
+	}
+
+	if currentVersion < 5 {
+		log.Println("Applying schema migration v5 (users and sessions)...")
+		_, err := db.Exec(`
+			CREATE TABLE IF NOT EXISTS users (
+				id TEXT PRIMARY KEY,
+				username TEXT UNIQUE NOT NULL,
+				password_hash TEXT NOT NULL,
+				display_name TEXT,
+				email TEXT,
+				profile_image_url TEXT
+			);
+
+			CREATE TABLE IF NOT EXISTS sessions (
+				id TEXT PRIMARY KEY,
+				user_id TEXT NOT NULL,
+				expires_at DATETIME NOT NULL,
+				FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+			);
+		`)
+		if err != nil {
+			return fmt.Errorf("failed to apply schema v5: %w", err)
+		}
+		_, err = db.Exec("PRAGMA user_version = 5;")
+		if err != nil {
+			return err
+		}
+		currentVersion = 5
+	}
+
+	if currentVersion < 6 {
+		log.Println("Applying schema migration v6 (account status columns)...")
+		_, err := db.Exec(`
+			ALTER TABLE accounts ADD COLUMN last_sync_status TEXT DEFAULT 'idle';
+			ALTER TABLE accounts ADD COLUMN last_sync_error TEXT;
+		`)
+		if err != nil {
+			log.Printf("Warning v6: %v", err)
+		}
+		_, err = db.Exec("PRAGMA user_version = 6;")
+		if err != nil {
+			return err
+		}
+		currentVersion = 6
+	}
+
+	if currentVersion < 7 {
+		log.Println("Applying schema migration v7 (app_settings and date fix)...")
+		_, err := db.Exec(`
+			CREATE TABLE IF NOT EXISTS app_settings (
+				key TEXT PRIMARY KEY,
+				value TEXT NOT NULL
+			);
+
+			INSERT OR IGNORE INTO app_settings (key, value) VALUES ('ignore_words', 're:,fwd:,the,and,for,this,that,with,from,your,have,status,update,alert,notification');
+
+			UPDATE messages SET date = date * 1000 WHERE date < 100000000000;
+			UPDATE messages SET internal_date = internal_date * 1000 WHERE internal_date < 100000000000;
+		`)
+		if err != nil {
+			log.Printf("Warning v7: %v", err)
+		}
+		_, err = db.Exec("PRAGMA user_version = 7;")
+		if err != nil {
+			return err
+		}
+		currentVersion = 7
 	}
 
 	log.Printf("Database schema is up to date (version %d).", SchemaVersion)
 	return nil
 }
 
-// CloseDB closes the database connection.
 func CloseDB() {
 	if db != nil {
 		db.Close()
-		log.Println("Database connection closed.")
 	}
 }
 
-// SaveAccount inserts a new account or updates an existing one.
-func SaveAccount(acc *account.Account) error {
+// App Settings functions
+func GetSetting(key string) (string, error) {
+	var value string
+	err := db.QueryRow("SELECT value FROM app_settings WHERE key = ?", key).Scan(&value)
+	if err == sql.ErrNoRows {
+		return "", nil
+	}
+	return value, err
+}
+
+func UpdateSetting(key, value string) error {
 	_, err := db.Exec(`
-		INSERT INTO accounts (id, host, port, user, password, ssl)
+		INSERT INTO app_settings (key, value) VALUES (?, ?)
+		ON CONFLICT(key) DO UPDATE SET value = EXCLUDED.value;
+	`, key, value)
+	return err
+}
+
+// User functions
+func SaveUser(u *User) error {
+	_, err := db.Exec(`
+		INSERT INTO users (id, username, password_hash, display_name, email, profile_image_url)
 		VALUES (?, ?, ?, ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET
+			username = EXCLUDED.username,
+			password_hash = EXCLUDED.password_hash,
+			display_name = EXCLUDED.display_name,
+			email = EXCLUDED.email,
+			profile_image_url = EXCLUDED.profile_image_url;
+	`, u.ID, u.Username, u.PasswordHash, u.DisplayName, u.Email, u.ProfileImageURL)
+	return err
+}
+
+func GetUserByUsername(username string) (*User, error) {
+	u := &User{}
+	err := db.QueryRow("SELECT id, username, password_hash, display_name, email, profile_image_url FROM users WHERE username = ?", username).
+		Scan(&u.ID, &u.Username, &u.PasswordHash, &u.DisplayName, &u.Email, &u.ProfileImageURL)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return u, err
+}
+
+func GetUserByID(id string) (*User, error) {
+	u := &User{}
+	err := db.QueryRow("SELECT id, username, password_hash, display_name, email, profile_image_url FROM users WHERE id = ?", id).
+		Scan(&u.ID, &u.Username, &u.PasswordHash, &u.DisplayName, &u.Email, &u.ProfileImageURL)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return u, err
+}
+
+func SaveSession(s *Session) error {
+	_, err := db.Exec("INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)", s.ID, s.UserID, s.ExpiresAt)
+	return err
+}
+
+func GetSession(id string) (*Session, error) {
+	s := &Session{}
+	err := db.QueryRow("SELECT id, user_id, expires_at FROM sessions WHERE id = ?", id).
+		Scan(&s.ID, &s.UserID, &s.ExpiresAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return s, err
+}
+
+func DeleteSession(id string) error {
+	_, err := db.Exec("DELETE FROM sessions WHERE id = ?", id)
+	return err
+}
+
+// Account functions
+func SaveAccount(acc *account.Account) error {
+	_, err := db.Exec(`
+		INSERT INTO accounts (id, name, email, host, port, user, password, ssl, smtp_host, smtp_port, last_sync_status, last_sync_error)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(id) DO UPDATE SET
+			name = EXCLUDED.name,
+			email = EXCLUDED.email,
 			host = EXCLUDED.host,
 			port = EXCLUDED.port,
 			user = EXCLUDED.user,
 			password = EXCLUDED.password,
-			ssl = EXCLUDED.ssl;
-	`, acc.ID, acc.Host, acc.Port, acc.User, acc.Password, acc.SSL)
-	if err != nil {
-		return fmt.Errorf("failed to save account: %w", err)
-	}
-	return nil
+			ssl = EXCLUDED.ssl,
+			smtp_host = EXCLUDED.smtp_host,
+			smtp_port = EXCLUDED.smtp_port,
+			last_sync_status = EXCLUDED.last_sync_status,
+			last_sync_error = EXCLUDED.last_sync_error;
+	`, acc.ID, acc.Name, acc.Email, acc.Host, acc.Port, acc.User, acc.Password, acc.SSL, acc.SMTPHost, acc.SMTPPort, acc.LastSyncStatus, acc.LastSyncError)
+	return err
 }
 
-// GetAccount retrieves an account by its ID.
 func GetAccount(id string) (*account.Account, error) {
 	acc := &account.Account{}
-	row := db.QueryRow("SELECT id, host, port, user, password, ssl FROM accounts WHERE id = ?", id)
-	err := row.Scan(&acc.ID, &acc.Host, &acc.Port, &acc.User, &acc.Password, &acc.SSL)
+	err := db.QueryRow("SELECT id, name, email, host, port, user, password, ssl, smtp_host, smtp_port, last_sync_status, last_sync_error FROM accounts WHERE id = ?", id).
+		Scan(&acc.ID, &acc.Name, &acc.Email, &acc.Host, &acc.Port, &acc.User, &acc.Password, &acc.SSL, &acc.SMTPHost, &acc.SMTPPort, &acc.LastSyncStatus, &acc.LastSyncError)
 	if err == sql.ErrNoRows {
-		return nil, nil // Account not found
+		return nil, nil
 	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to get account: %w", err)
-	}
-	return acc, nil
+	return acc, err
 }
 
-// ListAccounts retrieves all accounts.
 func ListAccounts() ([]*account.Account, error) {
-	rows, err := db.Query("SELECT id, host, port, user, password, ssl FROM accounts")
+	rows, err := db.Query("SELECT id, name, email, host, port, user, password, ssl, smtp_host, smtp_port, last_sync_status, last_sync_error FROM accounts")
 	if err != nil {
-		return nil, fmt.Errorf("failed to list accounts: %w", err)
+		return nil, err
+	}
+	defer rows.Close()
+	var accs []*account.Account
+	for rows.Next() {
+		acc := &account.Account{}
+		if err := rows.Scan(&acc.ID, &acc.Name, &acc.Email, &acc.Host, &acc.Port, &acc.User, &acc.Password, &acc.SSL, &acc.SMTPHost, &acc.SMTPPort, &acc.LastSyncStatus, &acc.LastSyncError); err != nil {
+			return nil, err
+		}
+		accs = append(accs, acc)
+	}
+	return accs, nil
+}
+
+func DeleteAccount(id string) error {
+	_, err := db.Exec("DELETE FROM accounts WHERE id = ?", id)
+	return err
+}
+
+func UpdateAccountStatus(id string, status string, lastError string) error {
+	_, err := db.Exec("UPDATE accounts SET last_sync_status = ?, last_sync_error = ? WHERE id = ?", status, lastError, id)
+	return err
+}
+
+// Message functions
+func SaveMessage(m *message.Message) error {
+	to, _ := json.Marshal(m.To)
+	cc, _ := json.Marshal(m.Cc)
+	bcc, _ := json.Marshal(m.Bcc)
+	flags, _ := json.Marshal(m.Flags)
+
+	_, err := db.Exec(`
+		INSERT OR IGNORE INTO messages (id, account_id, uid, message_id, content_hash, normalized_body, from_addr, to_addrs, cc_addrs, bcc_addrs, subject, date, body, html_body, header, flags, size, internal_date)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+	`, m.ID, m.AccountID, m.UID, m.MessageID, m.ContentHash, m.NormalizedBody, m.From, string(to), string(cc), string(bcc), m.Subject, m.Date.UnixMilli(), m.Body, m.HTMLBody, m.Header, string(flags), m.Size, m.InternalDate.UnixMilli())
+	return err
+}
+
+func ListMessagesFiltered(accountID string, filter AnalyticsFilter, limit, offset int) ([]*message.Message, error) {
+	query := "SELECT id, account_id, uid, message_id, content_hash, normalized_body, from_addr, to_addrs, cc_addrs, bcc_addrs, subject, date, body, html_body, header, flags, size, internal_date FROM messages"
+	args := []interface{}{}
+	
+	var clauses []string
+	if accountID != "" {
+		clauses = append(clauses, "account_id = ?")
+		args = append(args, accountID)
+	}
+	if filter.Date != "" {
+		clauses = append(clauses, "strftime('%Y-%m-%d', date / 1000, 'unixepoch') = ?")
+		args = append(args, filter.Date)
+	}
+	if filter.From != "" {
+		clauses = append(clauses, "from_addr = ?")
+		args = append(args, filter.From)
+	}
+	if filter.Topic != "" {
+		clauses = append(clauses, "subject LIKE ?")
+		args = append(args, "%"+filter.Topic+"%")
+	}
+
+	if len(clauses) > 0 {
+		query += " WHERE " + strings.Join(clauses, " AND ")
+	}
+
+	query += " ORDER BY date DESC LIMIT ? OFFSET ?"
+	args = append(args, limit, offset)
+
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		return nil, err
 	}
 	defer rows.Close()
 
-	var accounts []*account.Account
+	var msgs []*message.Message
 	for rows.Next() {
-		acc := &account.Account{}
-		if err := rows.Scan(&acc.ID, &acc.Host, &acc.Port, &acc.User, &acc.Password, &acc.SSL); err != nil {
-			return nil, fmt.Errorf("failed to scan account row: %w", err)
+		m := &message.Message{}
+		var to, cc, bcc, flags string
+		var date, internalDate int64
+		err := rows.Scan(&m.ID, &m.AccountID, &m.UID, &m.MessageID, &m.ContentHash, &m.NormalizedBody, &m.From, &to, &cc, &bcc, &m.Subject, &date, &m.Body, &m.HTMLBody, &m.Header, &flags, &m.Size, &internalDate)
+		if err != nil {
+			return nil, err
 		}
-		accounts = append(accounts, acc)
+		json.Unmarshal([]byte(to), &m.To)
+		json.Unmarshal([]byte(cc), &m.Cc)
+		json.Unmarshal([]byte(bcc), &m.Bcc)
+		json.Unmarshal([]byte(flags), &m.Flags)
+		m.Date = time.UnixMilli(date)
+		m.InternalDate = time.UnixMilli(internalDate)
+		msgs = append(msgs, m)
 	}
-	return accounts, nil
+	return msgs, nil
 }
 
-// DeleteAccount deletes an account by its ID.
-func DeleteAccount(id string) error {
-	_, err := db.Exec("DELETE FROM accounts WHERE id = ?", id)
+func ListMessages(accountID string, limit, offset int) ([]*message.Message, error) {
+	return ListMessagesFiltered(accountID, AnalyticsFilter{}, limit, offset)
+}
+
+func GetMessageByID(id string) (*message.Message, error) {
+	m := &message.Message{}
+	var to, cc, bcc, flags string
+	var date, internalDate int64
+	err := db.QueryRow("SELECT id, account_id, uid, message_id, content_hash, normalized_body, from_addr, to_addrs, cc_addrs, bcc_addrs, subject, date, body, html_body, header, flags, size, internal_date FROM messages WHERE id = ?", id).
+		Scan(&m.ID, &m.AccountID, &m.UID, &m.MessageID, &m.ContentHash, &m.NormalizedBody, &m.From, &to, &cc, &bcc, &m.Subject, &date, &m.Body, &m.HTMLBody, &m.Header, &flags, &m.Size, &internalDate)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 	if err != nil {
-		return fmt.Errorf("failed to delete account: %w", err)
+		return nil, err
 	}
-	return nil
+	json.Unmarshal([]byte(to), &m.To)
+	json.Unmarshal([]byte(cc), &m.Cc)
+	json.Unmarshal([]byte(bcc), &m.Bcc)
+	json.Unmarshal([]byte(flags), &m.Flags)
+	m.Date = time.UnixMilli(date)
+	m.InternalDate = time.UnixMilli(internalDate)
+	return m, nil
 }
 
-// SaveMailboxSyncState saves or updates the sync state of a mailbox.
-func SaveMailboxSyncState(state *MailboxSyncState) error {
+func MessageExistsByMessageID(messageID string) (bool, error) {
+	var count int
+	err := db.QueryRow("SELECT COUNT(*) FROM messages WHERE message_id = ?", messageID).Scan(&count)
+	return count > 0, err
+}
+
+// Mailbox Sync State
+func SaveMailboxSyncState(s *MailboxSyncState) error {
 	_, err := db.Exec(`
 		INSERT INTO mailboxes (id, account_id, name, last_uid, last_modseq)
 		VALUES (?, ?, ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET
 			last_uid = EXCLUDED.last_uid,
 			last_modseq = EXCLUDED.last_modseq;
-	`, state.ID, state.AccountID, state.Name, state.LastUID, state.LastMODSEQ)
-	if err != nil {
-		return fmt.Errorf("failed to save mailbox sync state: %w", err)
-	}
-	return nil
+	`, s.ID, s.AccountID, s.Name, s.LastUID, s.LastMODSEQ)
+	return err
 }
 
-// GetMailboxSyncState retrieves the sync state of a mailbox.
 func GetMailboxSyncState(id string) (*MailboxSyncState, error) {
-	state := &MailboxSyncState{}
-	row := db.QueryRow("SELECT id, account_id, name, last_uid, last_modseq FROM mailboxes WHERE id = ?", id)
-	err := row.Scan(&state.ID, &state.AccountID, &state.Name, &state.LastUID, &state.LastMODSEQ)
+	s := &MailboxSyncState{}
+	err := db.QueryRow("SELECT id, account_id, name, last_uid, last_modseq FROM mailboxes WHERE id = ?", id).
+		Scan(&s.ID, &s.AccountID, &s.Name, &s.LastUID, &s.LastMODSEQ)
 	if err == sql.ErrNoRows {
-		return nil, nil // Mailbox state not found
+		return nil, nil
 	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to get mailbox sync state: %w", err)
-	}
-	return state, nil
+	return s, err
 }
 
-// ListMailboxSyncStates retrieves all mailbox sync states for a given account.
-func ListMailboxSyncStates(accountID string) ([]*MailboxSyncState, error) {
-	rows, err := db.Query("SELECT id, account_id, name, last_uid, last_modseq FROM mailboxes WHERE account_id = ?", accountID)
+// Analytics Helpers
+func applyFilters(query string, filter AnalyticsFilter, args []interface{}) (string, []interface{}) {
+	var clauses []string
+	if filter.Date != "" {
+		clauses = append(clauses, "strftime('%Y-%m-%d', date / 1000, 'unixepoch') = ?")
+		args = append(args, filter.Date)
+	}
+	if filter.From != "" {
+		clauses = append(clauses, "from_addr = ?")
+		args = append(args, filter.From)
+	}
+	if filter.Topic != "" {
+		clauses = append(clauses, "subject LIKE ?")
+		args = append(args, "%"+filter.Topic+"%")
+	}
+
+	if len(clauses) > 0 {
+		if strings.Contains(strings.ToUpper(query), "WHERE") {
+			query += " AND " + strings.Join(clauses, " AND ")
+		} else {
+			query += " WHERE " + strings.Join(clauses, " AND ")
+		}
+	}
+	return query, args
+}
+
+// Analytics functions
+func GetTemporalVolume(filter AnalyticsFilter) ([]AnalyticsData, error) {
+	query := "SELECT strftime('%Y-%m-%d', date / 1000, 'unixepoch') as day, COUNT(*) FROM messages"
+	args := []interface{}{}
+	query, args = applyFilters(query, filter, args)
+	
+	if !strings.Contains(strings.ToUpper(query), "WHERE") {
+		query += " WHERE date > 0"
+	} else {
+		query += " AND date > 0"
+	}
+	query += " GROUP BY day ORDER BY day ASC"
+	
+	rows, err := db.Query(query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list mailbox sync states: %w", err)
+		return nil, err
+	}
+	defer rows.Close()
+	var data []AnalyticsData
+	for rows.Next() {
+		var d AnalyticsData
+		if err := rows.Scan(&d.Label, &d.Value); err != nil {
+			return nil, err
+		}
+		data = append(data, d)
+	}
+	return data, nil
+}
+
+func GetTopSenders(filter AnalyticsFilter) ([]AnalyticsData, error) {
+	query := `
+		SELECT from_addr, COUNT(*) as count 
+		FROM messages 
+		WHERE from_addr NOT IN (SELECT email FROM accounts)
+		AND from_addr NOT LIKE '%david.d.fullmer@gmail.com%'
+	`
+	args := []interface{}{}
+	query, args = applyFilters(query, filter, args)
+	query += " GROUP BY from_addr ORDER BY count DESC LIMIT 10"
+
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var data []AnalyticsData
+	for rows.Next() {
+		var d AnalyticsData
+		if err := rows.Scan(&d.Label, &d.Value); err != nil {
+			return nil, err
+		}
+		data = append(data, d)
+	}
+	return data, nil
+}
+
+func GetTopicStats(filter AnalyticsFilter) ([]AnalyticsData, error) {
+	ignoreStr, _ := GetSetting("ignore_words")
+	ignoreWords := strings.Split(strings.ToLower(ignoreStr), ",")
+	
+	query := "SELECT LOWER(SUBSTR(subject, 1, INSTR(subject || ' ', ' ') - 1)) as topic, COUNT(*) as count FROM messages"
+	args := []interface{}{}
+	query, args = applyFilters(query, filter, args)
+	
+	if !strings.Contains(strings.ToUpper(query), "WHERE") {
+		query += " WHERE topic != ''"
+	} else {
+		query += " AND topic != ''"
+	}
+	query += " GROUP BY topic ORDER BY count DESC LIMIT 50"
+
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		return nil, err
 	}
 	defer rows.Close()
 
-	var states []*MailboxSyncState
+	var data []AnalyticsData
 	for rows.Next() {
-		state := &MailboxSyncState{}
-		if err := rows.Scan(&state.ID, &state.AccountID, &state.Name, &state.LastUID, &state.LastMODSEQ); err != nil {
-			return nil, fmt.Errorf("failed to scan mailbox sync state row: %w", err)
+		var d AnalyticsData
+		if err := rows.Scan(&d.Label, &d.Value); err != nil {
+			return nil, err
 		}
-		states = append(states, state)
-	}
-	return states, nil
-}
-
-// DeleteMailboxSyncState deletes a mailbox sync state by its ID.
-func DeleteMailboxSyncState(id string) error {
-	_, err := db.Exec("DELETE FROM mailboxes WHERE id = ?", id)
-	if err != nil {
-		return fmt.Errorf("failed to delete mailbox sync state: %w", err)
-	}
-	return nil
-}
-
-// SaveMessage inserts a new message or updates an existing one.
-func SaveMessage(msg *message.Message) error {
-	toAddrs, err := json.Marshal(msg.To)
-	if err != nil {
-		return fmt.Errorf("failed to marshal To addresses: %w", err)
-	}
-	ccAddrs, err := json.Marshal(msg.Cc)
-	if err != nil {
-		return fmt.Errorf("failed to marshal Cc addresses: %w", err)
-	}
-	bccAddrs, err := json.Marshal(msg.Bcc)
-	if err != nil {
-		return fmt.Errorf("failed to marshal Bcc addresses: %w", err)
-	}
-	flags, err := json.Marshal(msg.Flags)
-	if err != nil {
-		return fmt.Errorf("failed to marshal flags: %w", err)
-	}
-
-	_, err = db.Exec(`
-		INSERT INTO messages (
-			id, account_id, uid, message_id, content_hash, normalized_body,
-			from_addr, to_addrs, cc_addrs, bcc_addrs, subject, date,
-			body, html_body, header, flags, size, internal_date
-		) VALUES (
-			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-		) ON CONFLICT(id) DO UPDATE SET
-			account_id = EXCLUDED.account_id,
-			uid = EXCLUDED.uid,
-			message_id = EXCLUDED.message_id,
-			content_hash = EXCLUDED.content_hash,
-			normalized_body = EXCLUDED.normalized_body,
-			from_addr = EXCLUDED.from_addr,
-			to_addrs = EXCLUDED.to_addrs,
-			cc_addrs = EXCLUDED.cc_addrs,
-			bcc_addrs = EXCLUDED.bcc_addrs,
-			subject = EXCLUDED.subject,
-			date = EXCLUDED.date,
-			body = EXCLUDED.body,
-			html_body = EXCLUDED.html_body,
-			header = EXCLUDED.header,
-			flags = EXCLUDED.flags,
-			size = EXCLUDED.size,
-			internal_date = EXCLUDED.internal_date;
-	`,
-		msg.ID, msg.AccountID, msg.UID, msg.MessageID, msg.ContentHash, msg.NormalizedBody,
-		msg.From, toAddrs, ccAddrs, bccAddrs, msg.Subject, msg.Date.Unix(),
-		msg.Body, msg.HTMLBody, msg.Header, flags, msg.Size, msg.InternalDate.Unix(),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to save message: %w", err)
-	}
-	return nil
-}
-
-// GetMessage retrieves a message by its ID.
-func GetMessage(id string) (*message.Message, error) {
-	msg := &message.Message{}
-	var toAddrs, ccAddrs, bccAddrs, flags []byte
-	var dateUnix, internalDateUnix int64
-
-	row := db.QueryRow(`
-		SELECT id, account_id, uid, message_id, content_hash, normalized_body,
-		       from_addr, to_addrs, cc_addrs, bcc_addrs, subject, date,
-		       body, html_body, header, flags, size, internal_date
-		FROM messages WHERE id = ?
-	`, id)
-
-	err := row.Scan(
-		&msg.ID, &msg.AccountID, &msg.UID, &msg.MessageID, &msg.ContentHash, &msg.NormalizedBody,
-		&msg.From, &toAddrs, &ccAddrs, &bccAddrs, &msg.Subject, &dateUnix,
-		&msg.Body, &msg.HTMLBody, &msg.Header, &flags, &msg.Size, &internalDateUnix,
-	)
-	if err == sql.ErrNoRows {
-		return nil, nil // Message not found
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to get message: %w", err)
-	}
-
-	msg.Date = time.Unix(dateUnix, 0)
-	msg.InternalDate = time.Unix(internalDateUnix, 0)
-
-	if err := json.Unmarshal(toAddrs, &msg.To); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal To addresses: %w", err)
-	}
-	if err := json.Unmarshal(ccAddrs, &msg.Cc); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal Cc addresses: %w", err)
-	}
-	if err := json.Unmarshal(bccAddrs, &msg.Bcc); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal Bcc addresses: %w", err)
-	}
-	if err := json.Unmarshal(flags, &msg.Flags); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal flags: %w", err)
-	}
-
-	return msg, nil
-}
-
-// GetMessageByContentHash retrieves a message by its content hash.
-func GetMessageByContentHash(hash string) (*message.Message, error) {
-	msg := &message.Message{}
-	var toAddrs, ccAddrs, bccAddrs, flags []byte
-	var dateUnix, internalDateUnix int64
-
-	row := db.QueryRow(`
-		SELECT id, account_id, uid, message_id, content_hash, normalized_body,
-		       from_addr, to_addrs, cc_addrs, bcc_addrs, subject, date,
-		       body, html_body, header, flags, size, internal_date
-		FROM messages WHERE content_hash = ?
-	`, hash)
-
-	err := row.Scan(
-		&msg.ID, &msg.AccountID, &msg.UID, &msg.MessageID, &msg.ContentHash, &msg.NormalizedBody,
-		&msg.From, &toAddrs, &ccAddrs, &bccAddrs, &msg.Subject, &dateUnix,
-		&msg.Body, &msg.HTMLBody, &msg.Header, &flags, &msg.Size, &internalDateUnix,
-	)
-	if err == sql.ErrNoRows {
-		return nil, nil // Message not found
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to get message by content hash: %w", err)
-	}
-
-	msg.Date = time.Unix(dateUnix, 0)
-	msg.InternalDate = time.Unix(internalDateUnix, 0)
-
-	if err := json.Unmarshal(toAddrs, &msg.To); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal To addresses: %w", err)
-	}
-	if err := json.Unmarshal(ccAddrs, &msg.Cc); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal Cc addresses: %w", err)
-	}
-	if err := json.Unmarshal(bccAddrs, &msg.Bcc); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal Bcc addresses: %w", err)
-	}
-	if err := json.Unmarshal(flags, &msg.Flags); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal flags: %w", err)
-	}
-
-	return msg, nil
-}
-
-// MessageExistsByMessageID checks if a message with a given Message-ID already exists.
-func MessageExistsByMessageID(messageID string) (bool, error) {
-	var exists bool
-	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM messages WHERE message_id = ?)", messageID).Scan(&exists)
-	if err != nil {
-		return false, fmt.Errorf("failed to check if message by Message-ID exists: %w", err)
-	}
-	return exists, nil
-}
-
-// MessageExistsByContentHash checks if a message with a given content hash already exists.
-func MessageExistsByContentHash(contentHash string) (bool, error) {
-	var exists bool
-	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM messages WHERE content_hash = ?)", contentHash).Scan(&exists)
-	if err != nil {
-		return false, fmt.Errorf("failed to check if message by content hash exists: %w", err)
-	}
-	return exists, nil
-}
-
-// ListMessages retrieves all messages for a given account.
-func ListMessages(accountID string) ([]*message.Message, error) {
-	rows, err := db.Query(`
-		SELECT id, account_id, uid, message_id, content_hash, normalized_body,
-		       from_addr, to_addrs, cc_addrs, bcc_addrs, subject, date,
-		       body, html_body, header, flags, size, internal_date
-		FROM messages WHERE account_id = ?
-	`, accountID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list messages: %w", err)
-	}
-	defer rows.Close()
-
-	var msgs []*message.Message
-	for rows.Next() {
-		msg := &message.Message{}
-		var toAddrs, ccAddrs, bccAddrs, flags []byte
-		var dateUnix, internalDateUnix int64
-
-		if err := rows.Scan(
-			&msg.ID, &msg.AccountID, &msg.UID, &msg.MessageID, &msg.ContentHash, &msg.NormalizedBody,
-			&msg.From, &toAddrs, &ccAddrs, &bccAddrs, &msg.Subject, &dateUnix,
-			&msg.Body, &msg.HTMLBody, &msg.Header, &flags, &msg.Size, &internalDateUnix,
-		); err != nil {
-			return nil, fmt.Errorf("failed to scan message row: %w", err)
+		
+		isIgnored := false
+		for _, w := range ignoreWords {
+			cleanW := strings.TrimSpace(w)
+			if cleanW != "" && (d.Label == cleanW || len(d.Label) <= 2) {
+				isIgnored = true
+				break
+			}
 		}
-
-		msg.Date = time.Unix(dateUnix, 0)
-		msg.InternalDate = time.Unix(internalDateUnix, 0)
-
-		if err := json.Unmarshal(toAddrs, &msg.To); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal To addresses: %w", err)
+		if !isIgnored {
+			data = append(data, d)
 		}
-		if err := json.Unmarshal(ccAddrs, &msg.Cc); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal Cc addresses: %w", err)
+		if len(data) >= 10 {
+			break
 		}
-		if err := json.Unmarshal(bccAddrs, &msg.Bcc); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal Bcc addresses: %w", err)
-		}
-		if err := json.Unmarshal(flags, &msg.Flags); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal flags: %w", err)
-		}
-		msgs = append(msgs, msg)
 	}
-	return msgs, nil
+	return data, nil
+}
+
+func GetAccountStats(accountID string) (*account.AccountStats, error) {
+	stats := &account.AccountStats{}
+	err := db.QueryRow("SELECT COUNT(*) FROM messages WHERE account_id = ?", accountID).Scan(&stats.TotalMessages)
+	if err != nil {
+		return nil, err
+	}
+	err = db.QueryRow("SELECT COUNT(*) FROM messages WHERE account_id = ? AND flags NOT LIKE '%\\Seen%'", accountID).Scan(&stats.UnreadMessages)
+	if err != nil {
+		return nil, err
+	}
+	err = db.QueryRow("SELECT COALESCE(SUM(size), 0) FROM messages WHERE account_id = ?", accountID).Scan(&stats.StorageSize)
+	if err != nil {
+		return nil, err
+	}
+	if stats.TotalMessages > 0 {
+		var lastDate int64
+		err = db.QueryRow("SELECT MAX(date) FROM messages WHERE account_id = ?", accountID).Scan(&lastDate)
+		if err == nil {
+			stats.LastSync = time.UnixMilli(lastDate).Format(time.RFC3339)
+		}
+	} else {
+		stats.LastSync = "Never"
+	}
+	return stats, nil
 }
