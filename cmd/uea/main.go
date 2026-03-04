@@ -52,6 +52,7 @@ func main() {
 	apiMux.HandleFunc("/api/profile", handleProfile)
 	apiMux.HandleFunc("/api/analytics", handleAnalytics)
 	apiMux.HandleFunc("/api/settings", handleSettings)
+	apiMux.HandleFunc("/api/agents", handleAgents)
 
 	// Register the protected mux with auth middleware
 	mux.Handle("/api/accounts", auth.Middleware(http.HandlerFunc(handleAccounts)))
@@ -61,6 +62,7 @@ func main() {
 	mux.Handle("/api/profile", auth.Middleware(http.HandlerFunc(handleProfile)))
 	mux.Handle("/api/analytics", auth.Middleware(http.HandlerFunc(handleAnalytics)))
 	mux.Handle("/api/settings", auth.Middleware(http.HandlerFunc(handleSettings)))
+	mux.Handle("/api/agents", auth.Middleware(http.HandlerFunc(handleAgents)))
 
 	// Frontend Static Assets
 	content, err := embed.Content()
@@ -336,6 +338,67 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err := store.UpdateSetting(req.Key, req.Value); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func handleAgents(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		id := r.URL.Query().Get("id")
+		if id != "" {
+			agent, err := store.GetAgent(id)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			if agent == nil {
+				http.Error(w, "not found", http.StatusNotFound)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(agent)
+			return
+		}
+		
+		agents, err := store.ListAgents()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(agents)
+
+	case http.MethodPost:
+		var agent store.Agent
+		if err := json.NewDecoder(r.Body).Decode(&agent); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if agent.ID == "" {
+			agent.ID = strings.ToLower(strings.ReplaceAll(agent.Name, " ", "-"))
+		}
+		if err := store.SaveAgent(&agent); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(agent)
+
+	case http.MethodDelete:
+		id := r.URL.Query().Get("id")
+		if id == "" {
+			http.Error(w, "missing id parameter", http.StatusBadRequest)
+			return
+		}
+		if err := store.DeleteAgent(id); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

@@ -91,3 +91,15 @@ This document outlines the core features of the Email UEA workbench and provides
   5. Verify the filter is cleared and the dashboard data resets.
   6. Apply another filter, then click the **Clear All** button in the filter bar.
   7. Verify all filters are cleared and the filter bar disappears.
+
+## 10. AI Agent Builder
+**Feature:** Users can visually build and save Eino AI Agents.
+- **Steps to Test:**
+  1. Open **Tools -> AI Agents**.
+  2. Click **Create New Agent**.
+  3. Verify the React Flow canvas opens with default nodes (Input, Chat Model, Output).
+  4. Change the agent name to `Test Eino Agent` in the header.
+  5. Drag a connection (edge) between nodes to verify interactivity.
+  6. Click **Save Agent** and confirm the success dialog.
+  7. Click the back arrow to return to the list.
+  8. Verify the `Test Eino Agent` appears in the saved agents list.

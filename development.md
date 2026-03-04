@@ -12,12 +12,12 @@ The backend is responsible for:
 
 *   **Multi-Account Sync Engine**: A sophisticated worker pool architecture that manages concurrency on a per-host basis. It uses a stateful incremental sync to fetch new headers or flags, and a content-aware hashing algorithm for deduplication.
 *   **Data Persistence & Hybrid Search**: A hybrid search architecture that combines a lexical layer (FTS5) and a semantic layer (Vector Index) for fast and accurate search results.
-*   **API & AI Gateway**: A unified interface for multiple AI backends, with support for streaming responses using Server-Sent Events (SSE).
+*   **API & AI Gateway**: A unified interface for multiple AI backends, with support for streaming responses using Server-Sent Events (SSE). Integrates the Eino framework for orchestrating AI agent workflows.
 *   **CLI Management Suite**: A powerful administrative tool for managing accounts, running diagnostics, and performing maintenance tasks.
 
 ### 1.2. Frontend (ReactJS)
 
-The frontend is a modern ReactJS application built with Vite, TypeScript, and Tailwind CSS. It leverages the `nexus-shell` framework to provide a professional, VS Code-inspired Master-Detail-Filter layout. It utilizes `zustand` for high-performance global state management (especially for cross-filtering logic) and `@nivo/calendar` for rich data visualizations.
+The frontend is a modern ReactJS application built with Vite, TypeScript, and Tailwind CSS. It leverages the `nexus-shell` framework to provide a professional, VS Code-inspired Master-Detail-Filter layout. It utilizes `zustand` for high-performance global state management (especially for cross-filtering logic), `@nivo/calendar` for rich data visualizations, and `reactflow` for the Visual AI Agent Builder.
 
 ## 2. Getting Started
 

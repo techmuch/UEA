@@ -72,6 +72,12 @@ The "Pulse" is the primary engine for data discovery. It is composed of interact
 * **Intelligence Side-Panel:** While a user reads, this panel displays "Social Insights" (e.g., "This sender is in your Top 5% of contacts") and "Contextual Links" (e.g., links to previous threads regarding the same topic).  
 * **AI Quick-Compose:** A dedicated text area for the **Bullet-to-Draft** workflow.
 
+#### **3.2.4. Visual AI Agent Builder**
+
+* **Eino Integration:** Provides a graphical interface for defining and extending AI agents powered by the Eino framework.
+* **React Flow Canvas:** A drag-and-drop node-based editor for wiring `Input`, `Chat Model`, and `Output` nodes.
+* **Persistence:** Serializes canvas configurations into strict JSON definitions stored in the SQLite database.
+
 ## **4\. Workflows**
 
 ### **4.1. Cross-Filtering & Discovery**

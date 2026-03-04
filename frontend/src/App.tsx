@@ -3,6 +3,7 @@ import { ShellLayout, componentRegistry, useLayoutStore, menuRegistry, commandRe
 import { Layout, Search, Mail, BarChart2, Settings, Plus, Server, Shield, Trash2, Zap, Cpu, Eye, X, Check, AlertCircle, RefreshCw, MessageSquare, Inbox, Star, Send, File, AlertOctagon, Archive, MoreVertical, ChevronLeft, ChevronRight, CornerUpLeft, CornerUpRight, Trash, User, Lock } from 'lucide-react';
 import { ResponsiveCalendar } from '@nivo/calendar';
 import { create } from 'zustand';
+import { AgentManager } from './AgentManager';
 import 'nexus-shell/style.css';
 import './App.css';
 
@@ -1064,6 +1065,7 @@ componentRegistry.register('dashboard', Dashboard);
 componentRegistry.register('mail', MailClient);
 componentRegistry.register('search', () => <div className="p-8 text-muted-foreground italic text-center mt-20 font-medium">Search functionality coming soon...</div>);
 componentRegistry.register('settings', SettingsView);
+componentRegistry.register('agents', AgentManager);
 
 function App() {
   const [user, setUser] = useState<any>(null);
@@ -1186,6 +1188,12 @@ function App() {
       execute: () => openTool('search', 'Search'),
     });
     commandRegistry.registerCommand({
+      id: 'uea.open-agents',
+      label: 'AI Agents',
+      keybinding: 'Control+Shift+A',
+      execute: () => openTool('agents', 'AI Agents'),
+    });
+    commandRegistry.registerCommand({
       id: 'uea.open-settings',
       label: 'Settings',
       keybinding: 'Control+,',
@@ -1207,6 +1215,7 @@ function App() {
         { id: 'tools.dashboard', label: 'Analytics Dashboard', commandId: 'uea.open-dashboard' },
         { id: 'tools.mail', label: 'Mailbox', commandId: 'uea.open-mail' },
         { id: 'tools.search', label: 'Search Email', commandId: 'uea.open-search' },
+        { id: 'tools.agents', label: 'AI Agents', commandId: 'uea.open-agents' },
       ],
       'View': [
         { id: 'view.toggle-chat', label: 'Toggle Chat', commandId: 'nexus.toggle-chat', keybinding: 'Control+I' },

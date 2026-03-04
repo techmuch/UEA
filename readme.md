@@ -7,6 +7,7 @@
 *   **Unified Dashboard**: Aggregate and analyze email data from multiple accounts in a single professional-grade interface powered by the `nexus-shell` framework.
 *   **Interactive Analytics**: Explore your data with interactive heatmaps (powered by `@nivo/calendar`), dynamic donut charts, and topic treemaps. Drill down with deep cross-filtering between dates, senders, and topics.
 *   **Intelligent Mailbox**: Seamlessly pivot from high-level analytics to a high-performance email feed filtered precisely by your dashboard selections.
+*   **Visual AI Agent Builder**: Visually design and deploy custom AI agents powered by the Eino framework using an interactive node-based canvas (`reactflow`).
 *   **AI-Assisted Workflows**: Leverage the power of large language models (LLMs) to summarize threads, draft responses, and more.
 *   **Privacy-First**: Your data is stored locally, and no email content is ever sent to a third party without your explicit consent.
 *   **Cross-Platform**: UEA is available for Windows, macOS, and Linux.

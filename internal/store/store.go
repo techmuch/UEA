@@ -20,13 +20,21 @@ const (
 	// DBNAME is the default name for the SQLite database file.
 	DBNAME = "uea.db"
 	// SchemaVersion is the current version of the database schema.
-	SchemaVersion = 7
+	SchemaVersion = 8
 )
 
 var (
 	db     *sql.DB
 	dbOnce sync.Once
 )
+
+// Agent represents an AI Agent configuration.
+type Agent struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	SchemaJSON  string `json:"schemaJson"`
+}
 
 // User represents a system user.
 type User struct {
@@ -287,6 +295,26 @@ func migrateDB(db *sql.DB) error {
 		currentVersion = 7
 	}
 
+	if currentVersion < 8 {
+		log.Println("Applying schema migration v8 (agents table)...")
+		_, err := db.Exec(`
+			CREATE TABLE IF NOT EXISTS agents (
+				id TEXT PRIMARY KEY,
+				name TEXT NOT NULL,
+				description TEXT,
+				schema_json TEXT NOT NULL
+			);
+		`)
+		if err != nil {
+			log.Printf("Warning v8: %v", err)
+		}
+		_, err = db.Exec("PRAGMA user_version = 8;")
+		if err != nil {
+			return err
+		}
+		currentVersion = 8
+	}
+
 	log.Printf("Database schema is up to date (version %d).", SchemaVersion)
 	return nil
 }
@@ -295,6 +323,51 @@ func CloseDB() {
 	if db != nil {
 		db.Close()
 	}
+}
+
+// Agent functions
+func SaveAgent(a *Agent) error {
+	_, err := db.Exec(`
+		INSERT INTO agents (id, name, description, schema_json)
+		VALUES (?, ?, ?, ?)
+		ON CONFLICT(id) DO UPDATE SET
+			name = EXCLUDED.name,
+			description = EXCLUDED.description,
+			schema_json = EXCLUDED.schema_json;
+	`, a.ID, a.Name, a.Description, a.SchemaJSON)
+	return err
+}
+
+func GetAgent(id string) (*Agent, error) {
+	a := &Agent{}
+	err := db.QueryRow("SELECT id, name, description, schema_json FROM agents WHERE id = ?", id).
+		Scan(&a.ID, &a.Name, &a.Description, &a.SchemaJSON)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return a, err
+}
+
+func ListAgents() ([]*Agent, error) {
+	rows, err := db.Query("SELECT id, name, description, schema_json FROM agents")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var agents []*Agent
+	for rows.Next() {
+		a := &Agent{}
+		if err := rows.Scan(&a.ID, &a.Name, &a.Description, &a.SchemaJSON); err != nil {
+			return nil, err
+		}
+		agents = append(agents, a)
+	}
+	return agents, nil
+}
+
+func DeleteAgent(id string) error {
+	_, err := db.Exec("DELETE FROM agents WHERE id = ?", id)
+	return err
 }
 
 // App Settings functions
