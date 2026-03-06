@@ -36,75 +36,94 @@ The frontend is a modern ReactJS application built with Vite, TypeScript, and Ta
     cd uea
     ```
 
-2.  **Install frontend dependencies:**
+2.  **Build the entire project (Frontend & Backend):**
+
+    The simplest way to get started is to use the provided `Makefile`:
 
     ```bash
-    cd frontend
-    npm install
-    cd ..
+    make build
     ```
-
-3.  **Build the backend:**
-
-    ```bash
-    go build .
-    ```
+    This command installs frontend dependencies, builds the React application, embeds the assets into the Go binary, and compiles the backend into `bin/uea`.
 
 ### 2.3. Running the application
 
-To run the application in development mode, you'll need to start the backend and frontend separately.
+The project provides several ways to run the application using `make`:
 
-1.  **Start the backend:**
-
+1.  **Run in Background (Default):**
     ```bash
-    ./uea
+    make start
     ```
+    This stops any running instances, rebuilds the backend, and starts it in the background, logging to `uea.log`.
 
-2.  **Start the frontend:**
+2.  **Run in Foreground:**
+    ```bash
+    make start --foreground
+    ```
+    Use this if you want to see the logs directly in your terminal.
 
+3.  **Access the Dashboard:**
+    Once running, open your browser to `http://localhost:8080`.
+
+## 3. Development Workflows
+
+### 3.1. Makefile Reference
+
+The `Makefile` is the primary tool for managing the development lifecycle.
+
+| Command | Description |
+| :--- | :--- |
+| `make all` | Alias for `make build`. |
+| `make build` | Builds both the frontend and the backend. |
+| `make frontend` | Installs npm dependencies and builds the React application. |
+| `make backend` | Compiles the Go backend into `bin/uea`. |
+| `make test` | Runs both backend (`go test`) and frontend (`vitest`) tests. |
+| `make start` | Runs the backend in the background (logs to `uea.log`). |
+| `make start --foreground` | Runs the backend in the foreground. |
+| `make stop` | Stops any running backend instances. |
+| `make restart` | Restarts the backend. |
+| `make clean` | Removes build artifacts (`bin/`, `frontend/dist/`, etc.). |
+
+### 3.2. Local Development (Hot Reloading)
+
+For a faster development loop with hot-module replacement (HMR), you can run the components separately:
+
+1.  **Start the Backend:**
+    ```bash
+    go run ./cmd/uea/main.go
+    ```
+    (Defaults to `http://localhost:8080`)
+
+2.  **Start the Frontend Dev Server:**
     ```bash
     cd frontend
     npm run dev
     ```
+    (Defaults to `http://localhost:3000`)
 
-The UEA dashboard will be available at `http://localhost:3000`.
+The frontend dev server will proxy API requests to the backend.
 
-## 3. Development
+### 3.3. Backend Development
 
-### 3.1. Backend
+The backend code is located in `internal/`.
 
-The backend code is located in the root of the repository.
+*   **API Endpoints**: Defined in `internal/auth/` and other relevant packages.
+*   **Sync Engine**: Implemented in `internal/sync/`.
+*   **Storage**: Database logic is in `internal/store/`.
 
-*   **API Endpoints**: The API endpoints are defined in `api.go`.
-*   **Sync Engine**: The sync engine is implemented in `sync.go`.
-*   **Database**: The database schema is defined in `db.go`.
+### 3.4. Frontend Development
 
-### 3.2. Frontend
+The frontend code is located in the `frontend/src` directory.
 
-The frontend code is located in the `frontend` directory.
-
-*   **Components**: The React components are located in `frontend/src/components`.
-*   **Views**: The main views of the application are located in `frontend/src/views`.
-*   **API Client**: The API client is located in `frontend/src/api`.
+*   **Agent Manager**: `AgentManager.tsx` handles the visual builder logic.
+*   **Global State**: Managed via `App.tsx` and related components.
 
 ## 4. Testing
 
-### 4.1. Backend
+Testing is handled via `make test`, which triggers:
+- **Backend**: `go test ./...`
+- **Frontend**: `npm test` (Vitest)
 
-The backend includes a suite of integration tests that use a mock IMAP server to verify the functionality of the sync engine. To run the tests, use the following command:
-
-```bash
-go test ./...
-```
-
-### 4.2. Frontend
-
-The frontend uses Vitest, JSDOM, and React Testing Library for testing. To run the tests, use the following command:
-
-```bash
-cd frontend
-npm test
-```
+For more details on manual verification, see [test.md](test.md).
 
 ## 5. CI/CD
 

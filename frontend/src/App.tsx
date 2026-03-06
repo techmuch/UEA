@@ -59,9 +59,9 @@ const LoginView = ({ onLogin }: { onLogin: (user: any) => void }) => {
 
   return (
     <div className="h-screen w-screen flex items-center justify-center bg-background text-foreground p-4">
-      <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-xl p-8 animate-in fade-in zoom-in-95 duration-300">
+      <div className="w-full max-w-md bg-card border border-border  shadow-xl p-8 animate-in fade-in zoom-in-95 duration-300">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
+          <div className="w-16 h-16 bg-primary/10  flex items-center justify-center mb-4">
             <Mail className="w-8 h-8 text-primary" />
           </div>
           <h1 className="text-2xl font-bold">Email UEA</h1>
@@ -77,7 +77,7 @@ const LoginView = ({ onLogin }: { onLogin: (user: any) => void }) => {
                 type="text" 
                 value={username}
                 onChange={e => setUsername(e.target.value)}
-                className="w-full bg-background border border-border rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                className="w-full bg-background border border-border  py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                 placeholder="Enter username"
                 required
               />
@@ -92,7 +92,7 @@ const LoginView = ({ onLogin }: { onLogin: (user: any) => void }) => {
                 type="password" 
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full bg-background border border-border rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                className="w-full bg-background border border-border  py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                 placeholder="••••••••"
                 required
               />
@@ -100,7 +100,7 @@ const LoginView = ({ onLogin }: { onLogin: (user: any) => void }) => {
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-3 rounded-lg flex items-center gap-2">
+            <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-3  flex items-center gap-2">
               <AlertCircle className="w-4 h-4" />
               {error}
             </div>
@@ -109,7 +109,7 @@ const LoginView = ({ onLogin }: { onLogin: (user: any) => void }) => {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg font-semibold shadow-md hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 text-sm"
+            className="w-full bg-primary text-primary-foreground py-2.5  font-semibold shadow-md hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 text-sm"
           >
             {loading ? 'Authenticating...' : 'Sign In'}
           </button>
@@ -167,26 +167,26 @@ const Dashboard = () => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Analytics Pulse</h2>
         {(date || from || topic) && (
-          <button onClick={clearAll} className="flex items-center gap-1.5 text-[10px] font-semibold text-primary hover:bg-primary/20 bg-primary/10 px-2.5 py-1 rounded-full transition-colors">
+          <button onClick={clearAll} className="flex items-center gap-1.5 text-[10px] font-semibold text-primary hover:bg-primary/20 bg-primary/10 px-2.5 py-1  transition-colors">
             <X className="w-2.5 h-2.5" /> Clear Filters
           </button>
         )}
       </div>
 
       {(date || from || topic) && (
-        <div className="bg-primary/5 border border-primary/10 rounded-xl px-4 py-2 flex items-center gap-3 mb-6">
+        <div className="bg-primary/5 border border-primary/10  px-4 py-2 flex items-center gap-3 mb-6">
           <span className="text-[10px] font-bold uppercase tracking-wider text-primary/60">Active Filters:</span>
           <div className="flex flex-1 gap-2 overflow-auto no-scrollbar">
-            {date && <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-semibold rounded-md flex items-center gap-1 shadow-sm">Date: {date} <X onClick={() => setDate(null)} className="w-2.5 h-2.5 cursor-pointer" /></span>}
-            {from && <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-semibold rounded-md flex items-center gap-1 shadow-sm">From: {from} <X onClick={() => setFrom(null)} className="w-2.5 h-2.5 cursor-pointer" /></span>}
-            {topic && <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-semibold rounded-md flex items-center gap-1 shadow-sm">Topic: {topic} <X onClick={() => setTopic(null)} className="w-2.5 h-2.5 cursor-pointer" /></span>}
+            {date && <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-semibold  flex items-center gap-1 shadow-sm">Date: {date} <X onClick={() => setDate(null)} className="w-2.5 h-2.5 cursor-pointer" /></span>}
+            {from && <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-semibold  flex items-center gap-1 shadow-sm">From: {from} <X onClick={() => setFrom(null)} className="w-2.5 h-2.5 cursor-pointer" /></span>}
+            {topic && <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-semibold  flex items-center gap-1 shadow-sm">Topic: {topic} <X onClick={() => setTopic(null)} className="w-2.5 h-2.5 cursor-pointer" /></span>}
           </div>
         </div>
       )}
       
       <div className="space-y-6">
         {/* Temporal Volume - Calendar Heatmap */}
-        <div className={`p-6 bg-card border rounded-xl shadow-sm min-h-80 flex flex-col group transition-colors ${date ? 'border-primary ring-1 ring-primary' : 'border-border hover:border-primary/50'}`}>
+        <div className={`p-6 bg-card border  shadow-sm min-h-80 flex flex-col group transition-colors ${date ? 'border-primary ring-1 ring-primary' : 'border-border hover:border-primary/50'}`}>
           <div className="flex items-center gap-3 mb-4">
             <BarChart2 className="w-5 h-5 text-primary" />
             <span className="font-bold text-lg text-foreground">Communication Intensity {date ? `on ${date}` : ''}</span>
@@ -219,7 +219,7 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className={`p-6 bg-card border rounded-xl shadow-sm min-h-64 flex flex-col group transition-colors ${from ? 'border-primary ring-1 ring-primary' : 'border-border hover:border-primary/50'}`}>
+          <div className={`p-6 bg-card border  shadow-sm min-h-64 flex flex-col group transition-colors ${from ? 'border-primary ring-1 ring-primary' : 'border-border hover:border-primary/50'}`}>
             <div className="flex items-center gap-3 mb-4">
               <Mail className="w-5 h-5 text-primary" />
               <span className="font-bold text-lg text-foreground">Top Senders {from ? `(Filtered)` : ''}</span>
@@ -229,9 +229,9 @@ const Dashboard = () => {
                 <button 
                   key={i} 
                   onClick={() => setFrom(d.label)}
-                  className={`w-full flex items-center gap-2.5 p-1.5 rounded-lg transition-all ${from === d.label ? 'bg-primary/10 ring-1 ring-primary' : 'hover:bg-accent'}`}
+                  className={`w-full flex items-center gap-2.5 p-1.5  transition-all ${from === d.label ? 'bg-primary/10 ring-1 ring-primary' : 'hover:bg-accent'}`}
                 >
-                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-bold text-primary">
+                  <div className="w-7 h-7  bg-primary/10 flex items-center justify-center text-[9px] font-bold text-primary">
                     {d.label[0]?.toUpperCase() || '?'}
                   </div>
                   <div className="flex-1 min-w-0 text-left">
@@ -245,7 +245,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className={`p-6 bg-card border rounded-xl shadow-sm min-h-64 flex flex-col group transition-colors ${topic ? 'border-primary ring-1 ring-primary' : 'border-border hover:border-primary/50'}`}>
+          <div className={`p-6 bg-card border  shadow-sm min-h-64 flex flex-col group transition-colors ${topic ? 'border-primary ring-1 ring-primary' : 'border-border hover:border-primary/50'}`}>
             <div className="flex items-center gap-3 mb-4">
               <Layout className="w-5 h-5 text-primary" />
               <span className="font-bold text-lg text-foreground">Topic Trends {topic ? `(Filtered)` : ''}</span>
@@ -255,7 +255,7 @@ const Dashboard = () => {
                 <button 
                   key={i} 
                   onClick={() => setTopic(d.label)}
-                  className={`px-2.5 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1.5 transition-all ${topic === d.label ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-primary/10 hover:text-primary'}`}
+                  className={`px-2.5 py-1  text-[10px] font-semibold flex items-center gap-1.5 transition-all ${topic === d.label ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-primary/10 hover:text-primary'}`}
                 >
                   <span className="truncate max-w-[100px]">{d.label}</span>
                   <span className={`text-[9px] ${topic === d.label ? 'text-primary-foreground/70' : 'opacity-50 font-mono'}`}>{d.value}</span>
@@ -327,22 +327,22 @@ const MailClient = () => {
     return (
       <div className="flex flex-col h-full bg-background text-foreground animate-in slide-in-from-right-4 duration-200">
         <div className="h-12 border-b border-border flex items-center px-4 gap-4 sticky top-0 bg-background/80 backdrop-blur-md z-10">
-          <button onClick={() => setSelectedMessage(null)} className="p-2 hover:bg-accent rounded-full transition-colors">
+          <button onClick={() => setSelectedMessage(null)} className="p-2 hover:bg-accent  transition-colors">
             <ChevronLeft className="w-5 h-5" />
           </button>
           <div className="flex-1" />
-          <button className="p-2 hover:bg-accent rounded-full text-muted-foreground"><Archive className="w-4 h-4" /></button>
-          <button className="p-2 hover:bg-accent rounded-full text-muted-foreground"><AlertOctagon className="w-4 h-4" /></button>
-          <button className="p-2 hover:bg-accent rounded-full text-muted-foreground"><Trash className="w-4 h-4" /></button>
+          <button className="p-2 hover:bg-accent  text-muted-foreground"><Archive className="w-4 h-4" /></button>
+          <button className="p-2 hover:bg-accent  text-muted-foreground"><AlertOctagon className="w-4 h-4" /></button>
+          <button className="p-2 hover:bg-accent  text-muted-foreground"><Trash className="w-4 h-4" /></button>
           <div className="w-px h-6 bg-border mx-1" />
-          <button className="p-2 hover:bg-accent rounded-full text-muted-foreground"><Mail className="w-4 h-4" /></button>
-          <button className="p-2 hover:bg-accent rounded-full text-muted-foreground"><MoreVertical className="w-4 h-4" /></button>
+          <button className="p-2 hover:bg-accent  text-muted-foreground"><Mail className="w-4 h-4" /></button>
+          <button className="p-2 hover:bg-accent  text-muted-foreground"><MoreVertical className="w-4 h-4" /></button>
         </div>
 
         <div className="flex-1 overflow-auto p-8 max-w-5xl mx-auto w-full">
           <h1 className="text-2xl font-normal mb-8 text-foreground/90">{selectedMessage.subject || '(No Subject)'}</h1>
           <div className="flex items-start gap-4 mb-8">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+            <div className="w-10 h-10  bg-primary/20 flex items-center justify-center text-primary font-bold">
               {selectedMessage.from?.[0]?.toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
@@ -353,18 +353,18 @@ const MailClient = () => {
               <div className="text-xs text-muted-foreground">to {selectedMessage.to?.join(', ')}</div>
             </div>
             <div className="flex gap-2">
-              <button className="p-2 hover:bg-accent rounded-md transition-colors"><CornerUpLeft className="w-4 h-4" /></button>
-              <button className="p-2 hover:bg-accent rounded-md transition-colors"><MoreVertical className="w-4 h-4" /></button>
+              <button className="p-2 hover:bg-accent  transition-colors"><CornerUpLeft className="w-4 h-4" /></button>
+              <button className="p-2 hover:bg-accent  transition-colors"><MoreVertical className="w-4 h-4" /></button>
             </div>
           </div>
           <div className="prose prose-sm dark:prose-invert max-w-none border-t border-border pt-8 font-sans leading-relaxed whitespace-pre-wrap text-foreground/90">
             {selectedMessage.body || <span className="italic text-muted-foreground">No text content available.</span>}
           </div>
           <div className="mt-12 flex gap-3">
-            <button className="px-6 py-2 border border-border rounded-full flex items-center gap-2 hover:bg-accent text-sm transition-colors font-medium">
+            <button className="px-6 py-2 border border-border  flex items-center gap-2 hover:bg-accent text-sm transition-colors font-medium">
               <CornerUpLeft className="w-4 h-4" /> Reply
             </button>
-            <button className="px-6 py-2 border border-border rounded-full flex items-center gap-2 hover:bg-accent text-sm transition-colors font-medium">
+            <button className="px-6 py-2 border border-border  flex items-center gap-2 hover:bg-accent text-sm transition-colors font-medium">
               <CornerUpRight className="w-4 h-4" /> Forward
             </button>
           </div>
@@ -377,7 +377,7 @@ const MailClient = () => {
     <div className="flex h-full bg-background text-foreground overflow-hidden">
       <div className="w-64 flex flex-col pt-4 border-r border-border/50 bg-card/20">
         <div className="px-4 mb-6">
-          <button className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl shadow-sm hover:shadow-md transition-all font-semibold text-[13px]">
+          <button className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2  shadow-sm hover:shadow-md transition-all font-semibold text-[13px]">
             <Plus className="w-4 h-4" /> Compose
           </button>
         </div>
@@ -386,7 +386,7 @@ const MailClient = () => {
             <button
               key={item.id}
               onClick={() => setFolder(item.id)}
-              className={`w-full flex items-center gap-4 px-4 py-2.5 rounded-full text-sm transition-colors ${folder === item.id ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-accent text-foreground/70'}`}
+              className={`w-full flex items-center gap-4 px-4 py-2.5  text-sm transition-colors ${folder === item.id ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-accent text-foreground/70'}`}
             >
               <item.icon className={`w-4 h-4 ${folder === item.id ? 'text-primary' : 'text-muted-foreground'}`} />
               <span className="flex-1 text-left">{item.label}</span>
@@ -398,26 +398,26 @@ const MailClient = () => {
 
       <div className="flex-1 flex flex-col">
         <div className="h-12 border-b border-border flex items-center px-4 gap-2 sticky top-0 bg-background/80 backdrop-blur-md z-10">
-          <button className="p-2 hover:bg-accent rounded-md transition-colors"><input type="checkbox" className="rounded border-border" /></button>
-          <button onClick={fetchMessages} className={`p-2 hover:bg-accent rounded-md transition-colors ${loading ? 'animate-spin' : ''}`}>
+          <button className="p-2 hover:bg-accent  transition-colors"><input type="checkbox" className="border-border" /></button>
+          <button onClick={fetchMessages} className={`p-2 hover:bg-accent  transition-colors ${loading ? 'animate-spin' : ''}`}>
             <RefreshCw className="w-4 h-4 text-muted-foreground" />
           </button>
-          <button className="p-2 hover:bg-accent rounded-md transition-colors"><MoreVertical className="w-4 h-4 text-muted-foreground" /></button>
+          <button className="p-2 hover:bg-accent  transition-colors"><MoreVertical className="w-4 h-4 text-muted-foreground" /></button>
           <div className="flex-1" />
           <div className="text-xs text-muted-foreground font-medium">1-50 of {messages.length}</div>
-          <button className="p-2 hover:bg-accent rounded-md transition-colors"><ChevronLeft className="w-4 h-4 text-muted-foreground" /></button>
-          <button className="p-2 hover:bg-accent rounded-md transition-colors"><ChevronRight className="w-4 h-4 text-muted-foreground" /></button>
+          <button className="p-2 hover:bg-accent  transition-colors"><ChevronLeft className="w-4 h-4 text-muted-foreground" /></button>
+          <button className="p-2 hover:bg-accent  transition-colors"><ChevronRight className="w-4 h-4 text-muted-foreground" /></button>
         </div>
 
         {(date || from || topic) && (
           <div className="bg-primary/5 border-b border-primary/10 px-4 py-1.5 flex items-center gap-3">
             <span className="text-[9px] font-bold uppercase tracking-wider text-primary/60">Active Filters:</span>
             <div className="flex flex-1 gap-1.5 overflow-auto no-scrollbar">
-              {date && <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[9px] font-semibold rounded-md flex items-center gap-1 shadow-sm">Date: {date} <X onClick={() => useFilterStore.getState().setDate(null)} className="w-2 h-2 cursor-pointer" /></span>}
-              {from && <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[9px] font-semibold rounded-md flex items-center gap-1 shadow-sm">From: {from} <X onClick={() => useFilterStore.getState().setFrom(null)} className="w-2 h-2 cursor-pointer" /></span>}
-              {topic && <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[9px] font-semibold rounded-md flex items-center gap-1 shadow-sm">Topic: {topic} <X onClick={() => useFilterStore.getState().setTopic(null)} className="w-2 h-2 cursor-pointer" /></span>}
+              {date && <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[9px] font-semibold  flex items-center gap-1 shadow-sm">Date: {date} <X onClick={() => useFilterStore.getState().setDate(null)} className="w-2 h-2 cursor-pointer" /></span>}
+              {from && <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[9px] font-semibold  flex items-center gap-1 shadow-sm">From: {from} <X onClick={() => useFilterStore.getState().setFrom(null)} className="w-2 h-2 cursor-pointer" /></span>}
+              {topic && <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[9px] font-semibold  flex items-center gap-1 shadow-sm">Topic: {topic} <X onClick={() => useFilterStore.getState().setTopic(null)} className="w-2 h-2 cursor-pointer" /></span>}
             </div>
-            <button onClick={clearAll} className="text-[9px] font-bold text-primary hover:bg-primary/10 px-2 py-0.5 rounded transition-colors uppercase tracking-tighter">Clear All</button>
+            <button onClick={clearAll} className="text-[9px] font-bold text-primary hover:bg-primary/10 px-2 py-0.5 transition-colors uppercase tracking-tighter">Clear All</button>
           </div>
         )}
 
@@ -437,7 +437,7 @@ const MailClient = () => {
                 className={`flex items-center px-4 py-2 border-b border-border/50 cursor-pointer transition-colors group ${isUnread ? 'bg-accent/20' : 'hover:bg-accent/40'}`}
               >
                 <div className="flex items-center gap-3 mr-4">
-                  <input type="checkbox" onClick={(e) => e.stopPropagation()} className="rounded border-border" />
+                  <input type="checkbox" onClick={(e) => e.stopPropagation()} className="border-border" />
                   <Star className="w-4 h-4 text-muted-foreground/40 hover:text-yellow-500 transition-colors" />
                 </div>
                 <div className={`w-48 truncate mr-4 text-sm ${isUnread ? 'font-bold' : 'text-foreground/70'}`}>
@@ -674,7 +674,7 @@ const SettingsView = () => {
             <input 
               type="text" 
               placeholder="Search settings..." 
-              className="w-full bg-background border border-border rounded-md py-1.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+              className="w-full bg-background border border-border  py-1.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-all"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -706,7 +706,7 @@ const SettingsView = () => {
                 {!showAddForm && (
                   <button 
                     onClick={() => setShowAddForm(true)}
-                    className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90 transition-opacity"
+                    className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-1.5  text-xs font-semibold hover:opacity-90 transition-opacity"
                   >
                     <Plus className="w-3 h-3" /> Add Account
                   </button>
@@ -714,7 +714,7 @@ const SettingsView = () => {
               </div>
 
               {showAddForm && (
-                <div className="bg-card border border-primary/30 rounded-xl p-6 shadow-lg mb-8 animate-in fade-in slide-in-from-top-4 duration-200">
+                <div className="bg-card border border-primary/30  p-6 shadow-lg mb-8 animate-in fade-in slide-in-from-top-4 duration-200">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-lg font-bold">{editingAccountId ? 'Edit Account' : 'Add New Account'}</h3>
                     <button onClick={handleCancel} className="text-muted-foreground hover:text-foreground">
@@ -727,7 +727,7 @@ const SettingsView = () => {
                       <input 
                         type="text" 
                         placeholder="e.g. My Work Email"
-                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
+                        className="w-full bg-background border border-border  px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
                         value={formState.name}
                         onChange={(e) => setFormState({...formState, name: e.target.value})}
                       />
@@ -737,7 +737,7 @@ const SettingsView = () => {
                       <input 
                         type="email" 
                         placeholder="user@example.com"
-                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
+                        className="w-full bg-background border border-border  px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
                         value={formState.email}
                         onChange={(e) => setFormState({...formState, email: e.target.value})}
                       />
@@ -747,7 +747,7 @@ const SettingsView = () => {
                       <input 
                         type="text" 
                         placeholder="Login username"
-                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
+                        className="w-full bg-background border border-border  px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
                         value={formState.user}
                         onChange={(e) => setFormState({...formState, user: e.target.value})}
                       />
@@ -757,7 +757,7 @@ const SettingsView = () => {
                       <input 
                         type="password" 
                         placeholder="••••••••"
-                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
+                        className="w-full bg-background border border-border  px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
                         value={formState.pass}
                         onChange={(e) => setFormState({...formState, pass: e.target.value})}
                       />
@@ -768,14 +768,14 @@ const SettingsView = () => {
                         <input 
                           type="text" 
                           placeholder="imap.example.com"
-                          className="flex-1 bg-background border border-border rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
+                          className="flex-1 bg-background border border-border  px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
                           value={formState.imap}
                           onChange={(e) => setFormState({...formState, imap: e.target.value})}
                         />
                         <input 
                           type="text" 
                           placeholder="993"
-                          className="w-20 bg-background border border-border rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
+                          className="w-20 bg-background border border-border  px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
                           value={formState.port}
                           onChange={(e) => setFormState({...formState, port: e.target.value})}
                         />
@@ -785,7 +785,7 @@ const SettingsView = () => {
                       <input 
                         type="checkbox" 
                         id="ssl-toggle"
-                        className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+                        className="w-4 h-4 border-border text-primary focus:ring-primary"
                         checked={formState.ssl}
                         onChange={(e) => setFormState({...formState, ssl: e.target.checked})}
                       />
@@ -796,7 +796,7 @@ const SettingsView = () => {
                       <input 
                         type="text" 
                         placeholder="smtp.example.com"
-                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
+                        className="w-full bg-background border border-border  px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
                         value={formState.smtp}
                         onChange={(e) => setFormState({...formState, smtp: e.target.value})}
                       />
@@ -806,7 +806,7 @@ const SettingsView = () => {
                     <button 
                       onClick={() => handleTestConnection('form', formState.imap, formState.user, formState.pass)}
                       disabled={testingConnectionId === 'form'}
-                      className="flex items-center gap-1.5 text-[10px] font-bold text-primary hover:bg-primary/5 px-2 py-1 rounded transition-colors disabled:opacity-50 uppercase tracking-tight"
+                      className="flex items-center gap-1.5 text-[10px] font-bold text-primary hover:bg-primary/5 px-2 py-1 transition-colors disabled:opacity-50 uppercase tracking-tight"
                     >
                       {testingConnectionId === 'form' ? <Zap className="w-2.5 h-2.5 animate-pulse" /> : <Zap className="w-2.5 h-2.5" />}
                       Test Connection
@@ -814,20 +814,20 @@ const SettingsView = () => {
                     <div className="flex gap-2">
                       <button 
                         onClick={handleCancel}
-                        className="px-3 py-1.5 text-[11px] font-semibold hover:bg-accent rounded-md transition-colors uppercase"
+                        className="px-3 py-1.5 text-[11px] font-semibold hover:bg-accent  transition-colors uppercase"
                       >
                         Cancel
                       </button>
                       <button 
                         onClick={handleAddAccount}
-                        className="px-4 py-1.5 bg-primary text-primary-foreground rounded-md text-[11px] font-bold shadow-sm hover:opacity-90 transition-opacity uppercase"
+                        className="px-4 py-1.5 bg-primary text-primary-foreground  text-[11px] font-bold shadow-sm hover:opacity-90 transition-opacity uppercase"
                       >
                         {editingAccountId ? 'Update' : 'Save Account'}
                       </button>
                     </div>
                   </div>
                   {connectionResults['form'] && (
-                    <div className={`mt-4 p-3 rounded-lg flex items-start gap-3 text-xs ${connectionResults['form'].success ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
+                    <div className={`mt-4 p-3  flex items-start gap-3 text-xs ${connectionResults['form'].success ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
                       {connectionResults['form'].success ? <Check className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
                       {connectionResults['form'].message}
                     </div>
@@ -837,10 +837,10 @@ const SettingsView = () => {
 
               <div className="space-y-4">
                 {accounts.map(acc => (
-                  <div key={acc.id} className="bg-card border border-border rounded-xl p-5 shadow-sm group">
+                  <div key={acc.id} className="bg-card border border-border  p-5 shadow-sm group">
                     <div className="flex justify-between items-center mb-4">
                       <div className="flex items-center gap-3">
-                        <div className={`w-2.5 h-2.5 rounded-full ${
+                        <div className={`w-2.5 h-2.5  ${
                           acc.lastSyncStatus === 'syncing' ? 'bg-primary animate-pulse shadow-[0_0_8px_rgba(var(--primary),0.4)]' : 
                           acc.lastSyncStatus === 'error' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]' : 
                           'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]'
@@ -852,7 +852,7 @@ const SettingsView = () => {
                         <button 
                           onClick={() => handleSync(acc.id)}
                           disabled={acc.lastSyncStatus === 'syncing'}
-                          className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                          className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10  transition-all"
                           title="Sync Now"
                         >
                           <RefreshCw className={`w-4 h-4 ${acc.lastSyncStatus === 'syncing' ? 'animate-spin' : ''}`} />
@@ -860,20 +860,20 @@ const SettingsView = () => {
                         <button 
                           onClick={() => handleTestConnection(acc.id, acc.host, acc.user, acc.password)}
                           disabled={testingConnectionId === acc.id}
-                          className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                          className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10  transition-all"
                           title="Test Connection"
                         >
                           <Server className={`w-4 h-4 ${testingConnectionId === acc.id ? 'animate-pulse' : ''}`} />
                         </button>
                         <button 
                           onClick={() => handleEditAccount(acc)}
-                          className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-all"
+                          className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent  transition-all"
                         >
                           <Settings className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => handleDeleteAccount(acc.id)}
-                          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
+                          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10  transition-all"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -881,7 +881,7 @@ const SettingsView = () => {
                     </div>
                     
                     {acc.lastSyncStatus === 'error' && acc.lastSyncError && (
-                      <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3 text-xs text-red-500 animate-in slide-in-from-top-2 duration-200">
+                      <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20  flex items-start gap-3 text-xs text-red-500 animate-in slide-in-from-top-2 duration-200">
                         <AlertCircle className="w-4 h-4 shrink-0" />
                         <div>
                           <div className="font-bold uppercase tracking-tight mb-0.5">Synchronization Error</div>
@@ -891,15 +891,15 @@ const SettingsView = () => {
                     )}
                     
                     <div className="grid grid-cols-3 gap-4 mb-6">
-                      <div className="text-center p-3 bg-muted/30 rounded-lg border border-border/50">
+                      <div className="text-center p-3 bg-muted/30  border border-border/50">
                         <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Messages</div>
                         <div className="text-lg font-bold tabular-nums">{stats[acc.id]?.totalMessages || 0}</div>
                       </div>
-                      <div className="text-center p-3 bg-muted/30 rounded-lg border border-border/50">
+                      <div className="text-center p-3 bg-muted/30  border border-border/50">
                         <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Storage</div>
                         <div className="text-lg font-bold tabular-nums">{formatSize(stats[acc.id]?.storageSize)}</div>
                       </div>
-                      <div className="text-center p-3 bg-muted/30 rounded-lg border border-border/50">
+                      <div className="text-center p-3 bg-muted/30  border border-border/50">
                         <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Last Sync</div>
                         <div className="text-xs font-medium h-7 flex items-center justify-center text-center">
                           {stats[acc.id]?.lastSync === 'Never' || !stats[acc.id]?.lastSync ? 'Never' : new Date(stats[acc.id]?.lastSync).toLocaleTimeString()}
@@ -908,7 +908,7 @@ const SettingsView = () => {
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 text-xs font-mono opacity-80">
-                      <div className="bg-muted/50 p-3 rounded-lg border border-border/50 flex items-center gap-3">
+                      <div className="bg-muted/50 p-3  border border-border/50 flex items-center gap-3">
                         <Server className="w-4 h-4 text-primary opacity-50" />
                         <div>
                           <div className="text-[10px] uppercase font-bold tracking-tighter opacity-50 flex items-center gap-2">
@@ -917,7 +917,7 @@ const SettingsView = () => {
                           {acc.host}:{acc.port}
                         </div>
                       </div>
-                      <div className="bg-muted/50 p-3 rounded-lg border border-border/50 flex items-center gap-3">
+                      <div className="bg-muted/50 p-3  border border-border/50 flex items-center gap-3">
                         <Zap className="w-4 h-4 text-primary opacity-50" />
                         <div>
                           <div className="text-[10px] uppercase font-bold tracking-tighter opacity-50">SMTP</div>
@@ -926,7 +926,7 @@ const SettingsView = () => {
                       </div>
                     </div>
                     {connectionResults[acc.id] && (
-                      <div className={`mt-4 p-3 rounded-lg flex items-start gap-3 text-xs ${connectionResults[acc.id].success ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
+                      <div className={`mt-4 p-3  flex items-start gap-3 text-xs ${connectionResults[acc.id].success ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
                         {connectionResults[acc.id].success ? <Check className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
                         {connectionResults[acc.id].message}
                       </div>
@@ -945,21 +945,21 @@ const SettingsView = () => {
               <form onSubmit={handleUpdateProfile} className="space-y-6">
                 <div className="flex items-center gap-8 mb-8">
                   <div className="relative group">
-                    <div className="w-24 h-24 rounded-2xl bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
+                    <div className="w-24 h-24  bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
                       {userProfile.profileImageUrl ? (
                         <img src={userProfile.profileImageUrl} alt="Profile" className="w-full h-full object-cover" />
                       ) : (
                         <User className="w-10 h-10 text-muted-foreground opacity-50" />
                       )}
                     </div>
-                    <button type="button" className="absolute inset-0 bg-black/40 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-2xl">CHANGE</button>
+                    <button type="button" className="absolute inset-0 bg-black/40 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity ">CHANGE</button>
                   </div>
                   <div className="flex-1 space-y-4">
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Display Name</label>
                       <input 
                         type="text" 
-                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        className="w-full bg-background border border-border  px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                         value={userProfile.displayName || ''}
                         onChange={e => setUserProfile({...userProfile, displayName: e.target.value})}
                       />
@@ -968,7 +968,7 @@ const SettingsView = () => {
                       <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Email Address</label>
                       <input 
                         type="email" 
-                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        className="w-full bg-background border border-border  px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                         value={userProfile.email || ''}
                         onChange={e => setUserProfile({...userProfile, email: e.target.value})}
                       />
@@ -981,14 +981,14 @@ const SettingsView = () => {
                   <input 
                     type="text" 
                     placeholder="https://example.com/avatar.jpg"
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    className="w-full bg-background border border-border  px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     value={userProfile.profileImageUrl || ''}
                     onChange={e => setUserProfile({...userProfile, profileImageUrl: e.target.value})}
                   />
                 </div>
 
                 <div className="pt-4">
-                  <button type="submit" className="bg-primary text-primary-foreground px-5 py-2 rounded-lg font-semibold shadow-sm hover:opacity-90 active:scale-[0.98] transition-all text-sm">Save Profile</button>
+                  <button type="submit" className="bg-primary text-primary-foreground px-5 py-2  font-semibold shadow-sm hover:opacity-90 active:scale-[0.98] transition-all text-sm">Save Profile</button>
                 </div>
               </form>
             </div>
@@ -1008,9 +1008,9 @@ const SettingsView = () => {
                       <button 
                         key={t.id}
                         onClick={() => setTheme(t.id as any)}
-                        className={`p-4 border rounded-xl flex flex-col items-center gap-2 transition-all ${theme === t.id ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border hover:bg-accent'}`}
+                        className={`p-4 border  flex flex-col items-center gap-2 transition-all ${theme === t.id ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border hover:bg-accent'}`}
                       >
-                        <div className={`w-full h-16 rounded-md mb-1 shadow-inner ${t.id === 'light' ? 'bg-white' : t.id === 'dark' ? 'bg-zinc-900' : 'bg-[#B3A369]'}`} />
+                        <div className={`w-full h-16  mb-1 shadow-inner ${t.id === 'light' ? 'bg-white' : t.id === 'dark' ? 'bg-zinc-900' : 'bg-[#B3A369]'}`} />
                         <span className="text-sm font-medium">{t.label}</span>
                         {theme === t.id && <Check className="w-3 h-3 text-primary absolute top-2 right-2" />}
                       </button>
@@ -1031,7 +1031,7 @@ const SettingsView = () => {
                   <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Topic Trend Ignore Words</label>
                   <p className="text-xs text-muted-foreground mb-2 text-balance leading-relaxed">Common words or prefixes to exclude from the topic analysis. Separate multiple words with commas.</p>
                   <textarea 
-                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all h-32 font-mono"
+                    className="w-full bg-background border border-border  px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all h-32 font-mono"
                     value={ignoreWords}
                     onChange={e => setIgnoreWords(e.target.value)}
                     placeholder="re:,fwd:,the,and,etc..."
@@ -1039,7 +1039,7 @@ const SettingsView = () => {
                 </div>
                 <button 
                   onClick={handleUpdateIgnoreWords}
-                  className="bg-primary text-primary-foreground px-5 py-2 rounded-lg font-semibold shadow-sm hover:opacity-90 active:scale-[0.98] transition-all text-sm"
+                  className="bg-primary text-primary-foreground px-5 py-2  font-semibold shadow-sm hover:opacity-90 active:scale-[0.98] transition-all text-sm"
                 >
                   Save Configuration
                 </button>

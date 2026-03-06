@@ -1,4 +1,4 @@
-.PHONY: all build frontend backend clean run stop start restart
+.PHONY: all build frontend backend clean run stop start restart test
 
 all: build
 
@@ -16,6 +16,12 @@ frontend:
 backend:
 	@echo "Building backend..."
 	go build -o bin/uea ./cmd/uea
+
+test:
+	@echo "Running backend tests..."
+	go test ./...
+	@echo "Running frontend tests..."
+	npm --prefix frontend test -- --run
 
 clean:
 	@echo "Cleaning up build artifacts..."

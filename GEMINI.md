@@ -31,10 +31,12 @@ The project uses a `Makefile` to manage the build lifecycle.
 
 ### Key Commands
 - `make all`: Builds both the frontend and the backend.
-- `make frontend`: Installs dependencies and builds the React application into `web/static`.
+- `make build`: Builds both the frontend and the backend.
+- `make frontend`: Installs dependencies, builds the React application, and copies assets to `internal/embed/static/`.
 - `make backend`: Compiles the Go application into `bin/uea`.
 - `make start`: Builds and runs the backend in the background (default).
-- `make start FG=1`: Runs the backend in the foreground.
+- `make start --foreground`: Runs the backend in the foreground.
+- `make test`: Runs both backend and frontend tests.
 - `make run`: Alias for `make start`.
 - `make restart`: Stops and then starts the server.
 - `make stop`: Stops any running backend instances.
@@ -47,8 +49,9 @@ The project uses a `Makefile` to manage the build lifecycle.
 2. **Backend Development:**
    - Run `go run ./cmd/uea/main.go` to start the backend server (defaults to `http://localhost:8080`).
 3. **Testing:**
+   - All tests: `make test`
    - Backend: `go test ./...`
-   - Frontend: `npm test` (inside the `frontend/` directory).
+   - Frontend: `npm --prefix frontend test` (Vitest).
 
 ## Development Guidelines
 - **Observability:** When the application is running, always open a browser tab (using the `new_page` tool) to the local development URL (typically `http://localhost:8080`) to observe the tool operating and validate UI changes.

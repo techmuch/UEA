@@ -14,7 +14,11 @@
 
 ## Getting Started
 
-UEA is distributed as a single, zero-dependency binary. To get started, download the latest release for your operating system and run the executable.
+UEA is distributed as a single, zero-dependency binary.
+
+### Download Release
+
+Download the latest release for your operating system and run the executable:
 
 ```bash
 ./uea
@@ -22,7 +26,19 @@ UEA is distributed as a single, zero-dependency binary. To get started, download
 
 This will start the web server. You can then access the UEA dashboard by opening your web browser and navigating to `http://localhost:8080`.
 
-The first time you run UEA, you will be prompted to create a master passphrase. This passphrase is used to encrypt your credentials and other sensitive data.
+### Build from Source
+
+To build UEA from source, ensure you have Go 1.21+ and Node.js 20+ installed, then run:
+
+```bash
+make build
+```
+
+This will produce the `bin/uea` executable. You can start the server in the foreground with:
+
+```bash
+make start --foreground
+```
 
 ## CLI Management
 

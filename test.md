@@ -4,6 +4,20 @@ This document outlines the core features of the Email UEA workbench and provides
 
 ---
 
+## Running Automated Tests
+
+To run the full suite of automated tests for both the backend and frontend, use the provided `Makefile`:
+
+```bash
+make test
+```
+
+This will:
+1.  Execute all Go tests in the project (`go test ./...`).
+2.  Run the frontend test suite using Vitest in non-interactive mode.
+
+---
+
 ## 1. Authentication & Security
 **Feature:** Secure access to the application and protected API endpoints.
 - **Steps to Test (Login):**

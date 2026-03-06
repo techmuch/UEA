@@ -75,7 +75,55 @@ The "Pulse" is the primary engine for data discovery. It is composed of interact
 #### **3.2.4. Visual AI Agent Builder**
 
 * **Eino Integration:** Provides a graphical interface for defining and extending AI agents powered by the Eino framework.
-* **React Flow Canvas:** A drag-and-drop node-based editor for wiring `Input`, `Chat Model`, and `Output` nodes.
+* **React Flow Canvas:** A drag-and-drop node-based editor for wiring nodes into complex agent topologies.
+* **Node Palette:** A dedicated panel on the left side of the interface allows users to drag and drop new nodes into the agent definition graph.
+* **Node Settings Panel:** A dedicated panel on the right side of the interface that displays and allows modification of configuration settings for the currently selected node in the canvas.
+* **Node Types & Settings:**
+  * **Core Operational Nodes:**
+    * **ChatModel:** The primary "reasoning" node that interacts with LLMs to process messages and generate responses.
+      * *Settings:* `Model Provider` (e.g., Local, OpenAI, Anthropic), `Model Name` (e.g., llama3, gpt-4o), `Temperature` (0.0 to 1.0 slider), `Max Tokens` (integer limit), `System Prompt Override`.
+    * **ToolsNode:** A specialized node used to invoke external functions, APIs, or tools. It handles the execution of capabilities identified by the ChatModel.
+      * *Settings:* `Available Tools` (multi-select checklist: e.g., web_search, read_email, send_email), `Timeout` (ms), `Retry Count`.
+    * **ChatTemplate:** Used to format user inputs and system instructions into structured message prompts before they reach the ChatModel.
+      * *Settings:* `System Message Template` (textarea), `User Message Template` (textarea), `Input Variables` (dynamic key-value mapping list).
+  * **Data & Context Nodes:**
+    * **Retriever:** Essential for RAG (Retrieval-Augmented Generation) workflows; this node fetches relevant documents or data from a vector database or knowledge base.
+      * *Settings:* `Data Source` (e.g., Email DB, Local Docs), `Top K Results` (integer), `Similarity Threshold` (0.0 to 1.0), `Query Template`.
+    * **Embedding:** Converts text into vector representations, often used in conjunction with a Retriever for semantic search.
+      * *Settings:* `Embedding Model` (e.g., all-MiniLM-L6-v2), `Chunk Size` (tokens), `Chunk Overlap` (tokens).
+    * **Lambda:** A flexible node for executing custom Go code logic, such as data transformation or specialized business rules, within the graph flow.
+      * *Settings:* `Function Code` (monaco editor/textarea for Go code), `Input Mapping`, `Output Mapping`.
+  * **Specialized Agent Patterns:**
+    * **ReAct Agent Node:** A high-level abstraction that combines reasoning and acting in a loop. It typically encapsulates a ChatModel and ToolsNode with a predefined topology.
+      * *Settings:* `Max Iterations`, `Model Selection` (inherits ChatModel settings), `Tools Selection` (inherits ToolsNode settings).
+    * **Workflow Agent Nodes:** Used for multi-agent orchestration, these include:
+      * **SequentialAgent:** Executes sub-agents in a fixed order.
+        * *Settings:* `Agent Sequence` (ordered list of selected sub-agents).
+      * **ParallelAgent:** Runs multiple sub-agents concurrently.
+        * *Settings:* `Target Agents` (multi-select), `Aggregation Strategy` (e.g., Concat, Reduce).
+      * **LoopAgent:** Iterates through a set of sub-agents until a condition is met.
+        * *Settings:* `Condition Evaluation` (Lambda/code logic), `Max Loops`.
+  * **Graph Plumbing:**
+    * **START / END:** Virtual nodes that define the entry and exit points of your graph.
+      * *Settings:* `Expected Input Schema` (for START), `Output Schema` (for END).
+    * **Branch:** While often implemented as a conditional edge, a branch logic point determines the next node based on runtime state (e.g., deciding whether to call a tool or finish the task).
+      * *Settings:* `Condition Map` (mapping of output states to target node IDs).
+* **Node Connections & Data Flow (Edges):** In the Eino framework, connecting nodes involves defining Edges that serve as channels for data flow and control logic. User behavior must support the following:
+  * **Ensure Type Alignment:**
+    * *Exact Match:* Upstream and downstream types should ideally be identical (e.g., both use `*schema.Message`).
+    * *Interface Implementation:* A connection is valid if the upstream concrete type implements the interface required by the downstream node.
+    * *Type Conversion:* If types do not align, use Eino's `WithOutputKey` option to convert an output into a `map[string]any` that the downstream node can process.
+  * **Define the Execution Path:** Explicitly define how information moves through the graph to control behavior:
+    * *Establish Entry and Exit:* Every graph must connect from a designated `START` node to receive initial user input, and route to an `END` node to return the final response.
+    * *Direct Edges:* Use direct connections for linear logic, such as passing a prompt from a `ChatTemplate` to a `ChatModel`.
+    * *Conditional Branching:* For non-linear agents (like a ReAct loop), define Branches after a node. This determines at runtime whether to follow one path (e.g., go to `ToolsNode`) or another (e.g., go to `END`) based on the model's output.
+  * **Manage State and Data Flow:** Support sophisticated data handling during node connection:
+    * *Field-Level Mapping:* In a Workflow, allow users to map specific output fields from multiple predecessor nodes into a single input for the next node.
+    * *Global State:* Instead of passing every piece of data through edges, enable storing shared information (like chat history) in a global State that nodes can read from or write to independently.
+    * *Passthrough Nodes:* Use Passthrough nodes to maintain data flow in parallel branches where one branch has fewer functional nodes than another, ensuring both branches synchronize correctly.
+  * **Visual vs. Code Orchestration:** Support generating standard graph definitions from the UI.
+    * *Visual Orchestration:* Use the React Flow canvas to visually drag connections between node ports.
+    * *Code-Based Generation:* The visual topology must successfully serialize into a format that allows the backend to instantiate the graph via Eino's `GraphBuilder` (e.g., using `AddEdge` or `AddBranch`).
 * **Persistence:** Serializes canvas configurations into strict JSON definitions stored in the SQLite database.
 
 ## **4\. Workflows**
